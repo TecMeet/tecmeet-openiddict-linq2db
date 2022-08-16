@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;net6.0;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <RootNamespace>TecMeet.OpenIddict.LinqToDB</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Description>LinqToDB stores for OpenIddict.</Description>
+    <PackageTags>$(PackageTags);linq2db</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TecMeet.OpenIddict.LinqToDB.Models\TecMeet.OpenIddict.LinqToDB.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="OpenIddict.Abstractions" />
+    <Using Include="OpenIddict.Abstractions.OpenIddictConstants" Static="true" />
+    <Using Include="OpenIddict.Abstractions.OpenIddictResources" Alias="SR" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="linq2db" Version="4.*" />
+    <PackageReference Include="OpenIddict.Core" Version="4.0.0-preview2.22368.68" />
+  </ItemGroup>
+
+</Project>

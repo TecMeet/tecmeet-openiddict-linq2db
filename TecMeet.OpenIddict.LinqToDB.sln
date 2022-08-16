@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TecMeet.OpenIddict.LinqToDB", "src\TecMeet.OpenIddict.LinqToDB\TecMeet.OpenIddict.LinqToDB.csproj", "{6A7A990F-F3D7-4D0C-9BF1-DCA5504A5109}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TecMeet.OpenIddict.LinqToDB.Models", "src\TecMeet.OpenIddict.LinqToDB.Models\TecMeet.OpenIddict.LinqToDB.Models.csproj", "{156A4EB6-BB1C-4B24-AEF7-BF3083DD9FD5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DF44884A-44D5-4406-932B-8E54FF9E7552}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{10125777-E12D-40BA-9286-60B324342DF0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenIddict.LinqToDB.Tests", "test\OpenIddict.LinqToDB.Tests\OpenIddict.LinqToDB.Tests.csproj", "{A72FF92A-F726-4F27-B6DF-0777F1C7E0D9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6A7A990F-F3D7-4D0C-9BF1-DCA5504A5109}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A7A990F-F3D7-4D0C-9BF1-DCA5504A5109}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A7A990F-F3D7-4D0C-9BF1-DCA5504A5109}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A7A990F-F3D7-4D0C-9BF1-DCA5504A5109}.Release|Any CPU.Build.0 = Release|Any CPU
+		{156A4EB6-BB1C-4B24-AEF7-BF3083DD9FD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{156A4EB6-BB1C-4B24-AEF7-BF3083DD9FD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{156A4EB6-BB1C-4B24-AEF7-BF3083DD9FD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{156A4EB6-BB1C-4B24-AEF7-BF3083DD9FD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A72FF92A-F726-4F27-B6DF-0777F1C7E0D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A72FF92A-F726-4F27-B6DF-0777F1C7E0D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A72FF92A-F726-4F27-B6DF-0777F1C7E0D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A72FF92A-F726-4F27-B6DF-0777F1C7E0D9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6A7A990F-F3D7-4D0C-9BF1-DCA5504A5109} = {DF44884A-44D5-4406-932B-8E54FF9E7552}
+		{156A4EB6-BB1C-4B24-AEF7-BF3083DD9FD5} = {DF44884A-44D5-4406-932B-8E54FF9E7552}
+		{A72FF92A-F726-4F27-B6DF-0777F1C7E0D9} = {10125777-E12D-40BA-9286-60B324342DF0}
+	EndGlobalSection
+EndGlobal
