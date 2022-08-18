@@ -51,9 +51,9 @@ public class OpenIddictLinqToDBAuthorizationStoreResolver : IOpenIddictAuthoriza
                        throw new InvalidOperationException(SR.GetResourceString(SR.ID0256));
 
             return typeof(OpenIddictLinqToDBAuthorizationStore<,,,>).MakeGenericType(
-                /* TAuthorization: */ _options.CurrentValue.DefaultAuthorizationType!,
+                /* TAuthorization: */ key,
                 /* TApplication: */ _options.CurrentValue.DefaultApplicationType!,
-                /* TToken: */ key,
+                /* TToken: */ _options.CurrentValue.DefaultTokenType!,
                 /* TKey: */ root.GenericTypeArguments[0]);
         });
 
