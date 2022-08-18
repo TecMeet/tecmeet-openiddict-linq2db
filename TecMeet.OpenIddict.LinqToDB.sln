@@ -10,6 +10,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{10125777-E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenIddict.LinqToDB.Tests", "test\OpenIddict.LinqToDB.Tests\OpenIddict.LinqToDB.Tests.csproj", "{A72FF92A-F726-4F27-B6DF-0777F1C7E0D9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{BC16C1D2-FF5D-48F7-A9DE-861B7D177265}"
+	ProjectSection(SolutionItems) = preProject
+		Build.cmd = Build.cmd
+		build.sh = build.sh
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		global.json = global.json
+		LICENSE.md = LICENSE.md
+		NuGet.config = NuGet.config
+		Packages.props = Packages.props
+		README.md = README.md
+		SECURITY.md = SECURITY.md
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
