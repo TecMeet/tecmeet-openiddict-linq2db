@@ -34,7 +34,7 @@ internal static class OpenIddictLinqToDBTableConfiguration
         // only set table info and primary key, other regular properties are inferred by LinqToDB
         builder.Entity<TApplication>()
             .HasTableName(applicationTableName)
-            .Property(i => i.Id).IsPrimaryKey();
+            .Property(i => i.Id).IsPrimaryKey().IsIdentity();
 
         return builder;
     }
@@ -58,7 +58,7 @@ internal static class OpenIddictLinqToDBTableConfiguration
         // only set table info and primary key, other regular properties are inferred by LinqToDB
         builder.Entity<TAuthorization>()
             .HasTableName(authorizationTableName)
-            .Property(i => i.Id).IsPrimaryKey();
+            .Property(i => i.Id).IsPrimaryKey().IsIdentity();
 
         return builder;
     }
@@ -82,7 +82,7 @@ internal static class OpenIddictLinqToDBTableConfiguration
         // only set table info and primary key, other regular properties are inferred by LinqToDB
         builder.Entity<TScope>()
             .HasTableName(scopeTableName)
-            .Property(i => i.Id).IsPrimaryKey();
+            .Property(i => i.Id).IsPrimaryKey().IsIdentity();
 
         return builder;
     }
@@ -106,7 +106,7 @@ internal static class OpenIddictLinqToDBTableConfiguration
         // only set table info and primary key, other regular properties are inferred by LinqToDB
         builder.Entity<TToken>()
             .HasTableName(tokenTableName)
-            .Property(i => i.Id).IsPrimaryKey();
+            .Property(i => i.Id).IsPrimaryKey().IsIdentity();
 
         return builder;
     }

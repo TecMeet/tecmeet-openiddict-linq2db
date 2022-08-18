@@ -11,14 +11,7 @@ namespace TecMeet.OpenIddict.LinqToDB.Models;
 /// <summary>
 /// Represents an OpenIddict application.
 /// </summary>
-public class OpenIddictLinqToDBApplication : OpenIddictLinqToDBApplication<string>
-{
-    public OpenIddictLinqToDBApplication()
-    {
-        // Generate a new string identifier.
-        Id = Guid.NewGuid().ToString();
-    }
-}
+public class OpenIddictLinqToDBApplication : OpenIddictLinqToDBApplication<string> {}
 
 /// <summary>
 /// Represents an OpenIddict application.
