@@ -7,6 +7,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using OpenIddict.Core;
 using OpenIddict.Extensions;
 using TecMeet.OpenIddict.LinqToDB.Models;
 
@@ -17,15 +18,15 @@ namespace TecMeet.OpenIddict.LinqToDB;
 /// </summary>
 public class OpenIddictLinqToDBTokenStoreResolver : IOpenIddictTokenStoreResolver
 {
+    private readonly IOptionsMonitor<OpenIddictCoreOptions> _options;
     private readonly ConcurrentDictionary<Type, Type> _cache = new();
-    private readonly IOptionsMonitor<OpenIddictLinqToDBOptions> _options;
     private readonly IServiceProvider _provider;
 
     public OpenIddictLinqToDBTokenStoreResolver(
-        IOptionsMonitor<OpenIddictLinqToDBOptions> options,
+        IOptionsMonitor<OpenIddictCoreOptions> options,
         IServiceProvider provider)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _options = options;
         _provider = provider ?? throw new ArgumentNullException(nameof(provider));
     }
 
@@ -35,7 +36,8 @@ public class OpenIddictLinqToDBTokenStoreResolver : IOpenIddictTokenStoreResolve
     /// </summary>
     /// <typeparam name="TToken">The type of the Token entity.</typeparam>
     /// <returns>An <see cref="IOpenIddictTokenStore{TToken}"/>.</returns>
-    public IOpenIddictTokenStore<TToken> Get<TToken>() where TToken : class
+    public IOpenIddictTokenStore<TToken> Get<TToken>()
+        where TToken : class
     {
         var store = _provider.GetService<IOpenIddictTokenStore<TToken>>();
         if (store is not null)
@@ -45,12 +47,14 @@ public class OpenIddictLinqToDBTokenStoreResolver : IOpenIddictTokenStoreResolve
 
         var type = _cache.GetOrAdd(typeof(TToken), key =>
         {
-            if (!typeof(OpenIddictLinqToDBToken).IsAssignableFrom(key))
-            {
-                throw new InvalidOperationException(SR.GetResourceString(SR.ID0260));
-            }
+            var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictLinqToDBToken<>)) ??
+                       throw new InvalidOperationException(SR.GetResourceString(SR.ID0256));
 
-            return typeof(OpenIddictLinqToDBTokenStore<>).MakeGenericType(key);
+            return typeof(OpenIddictLinqToDBTokenStore<,,,>).MakeGenericType(
+                /* TToken: */ key,
+                /* TApplication: */ _options.CurrentValue.DefaultApplicationType!,
+                /* TAuthorization: */ _options.CurrentValue.DefaultAuthorizationType!,
+                /* TKey: */ root.GenericTypeArguments[0]);
         });
 
         return (IOpenIddictTokenStore<TToken>) _provider.GetRequiredService(type);

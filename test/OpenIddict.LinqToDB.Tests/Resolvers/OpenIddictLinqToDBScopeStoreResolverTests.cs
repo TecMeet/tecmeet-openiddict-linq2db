@@ -4,15 +4,18 @@
  * the license and the contributors participating to this project.
  */
 
+using LinqToDB.Data;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Moq;
-using OpenIddict.LinqToDB.Models;
+using TecMeet.OpenIddict.LinqToDB;
+using TecMeet.OpenIddict.LinqToDB.Models;
 using Xunit;
 
 namespace OpenIddict.LinqToDB.Tests;
 
-public class OpenIddictMongoDbScopeStoreResolverTests
+public class OpenIddictLinqToDBScopeStoreResolverTests
 {
     [Fact]
     public void Get_ReturnsCustomStoreCorrespondingToTheSpecifiedTypeWhenAvailable()
@@ -22,7 +25,7 @@ public class OpenIddictMongoDbScopeStoreResolverTests
         services.AddSingleton(Mock.Of<IOpenIddictScopeStore<CustomScope>>());
 
         var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictMongoDbScopeStoreResolver(provider);
+        var resolver = new OpenIddictLinqToDBScopeStoreResolver(provider);
 
         // Act and assert
         Assert.NotNull(resolver.Get<CustomScope>());
@@ -35,7 +38,7 @@ public class OpenIddictMongoDbScopeStoreResolverTests
         var services = new ServiceCollection();
 
         var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictMongoDbScopeStoreResolver(provider);
+        var resolver = new OpenIddictLinqToDBScopeStoreResolver(provider);
 
         // Act and assert
         var exception = Assert.Throws<InvalidOperationException>(resolver.Get<CustomScope>);
@@ -52,18 +55,19 @@ public class OpenIddictMongoDbScopeStoreResolverTests
         services.AddSingleton(CreateStore());
 
         var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictMongoDbScopeStoreResolver(provider);
+        var resolver = new OpenIddictLinqToDBScopeStoreResolver(provider);
 
         // Act and assert
         Assert.NotNull(resolver.Get<MyScope>());
     }
 
-    private static OpenIddictMongoDbScopeStore<MyScope> CreateStore()
-        => new Mock<OpenIddictMongoDbScopeStore<MyScope>>(
-            Mock.Of<IOpenIddictMongoDbContext>(),
-            Mock.Of<IOptionsMonitor<OpenIddictMongoDbOptions>>()).Object;
+    private static OpenIddictLinqToDBScopeStore<MyScope, long> CreateStore()
+        => new Mock<OpenIddictLinqToDBScopeStore<MyScope, long>>(
+            Mock.Of<IMemoryCache>(),
+            Mock.Of<DataConnection>()).Object;
 
     public class CustomScope { }
 
-    public class MyScope : OpenIddictMongoDbScope { }
+    public class DataContext : DataConnection { }
+    public class MyScope : OpenIddictLinqToDBScope<long> {}
 }

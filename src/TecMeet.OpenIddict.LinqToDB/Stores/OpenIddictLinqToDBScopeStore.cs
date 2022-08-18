@@ -13,7 +13,6 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using LinqToDB;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using TecMeet.OpenIddict.LinqToDB.Models;
 using static OpenIddict.Abstractions.OpenIddictExceptions;
 
@@ -22,15 +21,12 @@ namespace TecMeet.OpenIddict.LinqToDB;
 /// <summary>
 /// Provides methods allowing to manage the scopes stored in a database.
 /// </summary>
-/// <typeparam name="TContext">The type of the LinqToDB database context.</typeparam>
-public class OpenIddictLinqToDBScopeStore<TContext> : OpenIddictLinqToDBScopeStore<OpenIddictLinqToDBScope, TContext, string>
-    where TContext : IDataContext
+public class OpenIddictLinqToDBScopeStore : OpenIddictLinqToDBScopeStore<OpenIddictLinqToDBScope, string>
 {
     public OpenIddictLinqToDBScopeStore(
         IMemoryCache cache,
-        TContext context,
-        IOptionsMonitor<OpenIddictLinqToDBOptions> options)
-        : base(cache, context, options)
+        IDataContext context)
+        : base(cache, context)
     {
     }
 }
@@ -38,17 +34,14 @@ public class OpenIddictLinqToDBScopeStore<TContext> : OpenIddictLinqToDBScopeSto
 /// <summary>
 /// Provides methods allowing to manage the scopes stored in a database.
 /// </summary>
-/// <typeparam name="TContext">The type of the LinqToDB database context.</typeparam>
 /// <typeparam name="TKey">The type of the entity primary keys.</typeparam>
-public class OpenIddictLinqToDBScopeStore<TContext, TKey> : OpenIddictLinqToDBScopeStore<OpenIddictLinqToDBScope<TKey>, TContext, TKey>
-    where TContext : IDataContext
+public class OpenIddictLinqToDBScopeStore<TKey> : OpenIddictLinqToDBScopeStore<OpenIddictLinqToDBScope<TKey>, TKey>
     where TKey : notnull, IEquatable<TKey>
 {
     public OpenIddictLinqToDBScopeStore(
         IMemoryCache cache,
-        TContext context,
-        IOptionsMonitor<OpenIddictLinqToDBOptions> options)
-        : base(cache, context, options)
+        IDataContext context)
+        : base(cache, context)
     {
     }
 }
@@ -57,21 +50,17 @@ public class OpenIddictLinqToDBScopeStore<TContext, TKey> : OpenIddictLinqToDBSc
 /// Provides methods allowing to manage the scopes stored in a database.
 /// </summary>
 /// <typeparam name="TScope">The type of the Scope entity.</typeparam>
-/// <typeparam name="TContext">The type of the LinqToDB database context.</typeparam>
 /// <typeparam name="TKey">The type of the entity primary keys.</typeparam>
-public class OpenIddictLinqToDBScopeStore<TScope, TContext, TKey> : IOpenIddictScopeStore<TScope>
+public class OpenIddictLinqToDBScopeStore<TScope, TKey> : IOpenIddictScopeStore<TScope>
     where TScope : OpenIddictLinqToDBScope<TKey>
-    where TContext : IDataContext
     where TKey : notnull, IEquatable<TKey>
 {
     public OpenIddictLinqToDBScopeStore(
         IMemoryCache cache,
-        TContext context,
-        IOptionsMonitor<OpenIddictLinqToDBOptions> options)
+        IDataContext context)
     {
         Cache = cache ?? throw new ArgumentNullException(nameof(cache));
         Context = context ?? throw new ArgumentNullException(nameof(context));
-        Options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
     /// <summary>
@@ -82,12 +71,7 @@ public class OpenIddictLinqToDBScopeStore<TScope, TContext, TKey> : IOpenIddictS
     /// <summary>
     /// Gets the database context associated with the current store.
     /// </summary>
-    protected TContext Context { get; }
-
-    /// <summary>
-    /// Gets the options associated with the current store.
-    /// </summary>
-    protected IOptionsMonitor<OpenIddictLinqToDBOptions> Options { get; }
+    protected IDataContext Context { get; }
 
     /// <summary>
     /// Gets the database set corresponding to the <typeparamref name="TScope"/> entity.

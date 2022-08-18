@@ -7,6 +7,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using OpenIddict.Core;
 using OpenIddict.Extensions;
 using TecMeet.OpenIddict.LinqToDB.Models;
 
@@ -18,14 +19,14 @@ namespace TecMeet.OpenIddict.LinqToDB;
 public class OpenIddictLinqToDBAuthorizationStoreResolver : IOpenIddictAuthorizationStoreResolver
 {
     private readonly ConcurrentDictionary<Type, Type> _cache = new();
-    private readonly IOptionsMonitor<OpenIddictLinqToDBOptions> _options;
+    private readonly IOptionsMonitor<OpenIddictCoreOptions> _options;
     private readonly IServiceProvider _provider;
 
     public OpenIddictLinqToDBAuthorizationStoreResolver(
-        IOptionsMonitor<OpenIddictLinqToDBOptions> options,
+        IOptionsMonitor<OpenIddictCoreOptions> options,
         IServiceProvider provider)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _options = options;
         _provider = provider ?? throw new ArgumentNullException(nameof(provider));
     }
 
@@ -35,7 +36,8 @@ public class OpenIddictLinqToDBAuthorizationStoreResolver : IOpenIddictAuthoriza
     /// </summary>
     /// <typeparam name="TAuthorization">The type of the Authorization entity.</typeparam>
     /// <returns>An <see cref="IOpenIddictAuthorizationStore{TAuthorization}"/>.</returns>
-    public IOpenIddictAuthorizationStore<TAuthorization> Get<TAuthorization>() where TAuthorization : class
+    public IOpenIddictAuthorizationStore<TAuthorization> Get<TAuthorization>()
+        where TAuthorization : class
     {
         var store = _provider.GetService<IOpenIddictAuthorizationStore<TAuthorization>>();
         if (store is not null)
@@ -45,12 +47,14 @@ public class OpenIddictLinqToDBAuthorizationStoreResolver : IOpenIddictAuthoriza
 
         var type = _cache.GetOrAdd(typeof(TAuthorization), key =>
         {
-            if (!typeof(OpenIddictLinqToDBAuthorization).IsAssignableFrom(key))
-            {
-                throw new InvalidOperationException(SR.GetResourceString(SR.ID0258));
-            }
+            var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictLinqToDBAuthorization<>)) ??
+                       throw new InvalidOperationException(SR.GetResourceString(SR.ID0256));
 
-            return typeof(OpenIddictLinqToDBAuthorizationStore<>).MakeGenericType(key);
+            return typeof(OpenIddictLinqToDBAuthorizationStore<,,,>).MakeGenericType(
+                /* TAuthorization: */ _options.CurrentValue.DefaultAuthorizationType!,
+                /* TApplication: */ _options.CurrentValue.DefaultApplicationType!,
+                /* TToken: */ key,
+                /* TKey: */ root.GenericTypeArguments[0]);
         });
 
         return (IOpenIddictAuthorizationStore<TAuthorization>) _provider.GetRequiredService(type);

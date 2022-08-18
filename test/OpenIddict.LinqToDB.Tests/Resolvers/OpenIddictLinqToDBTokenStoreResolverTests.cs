@@ -4,15 +4,19 @@
  * the license and the contributors participating to this project.
  */
 
+using LinqToDB;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Moq;
-using OpenIddict.LinqToDB.Models;
+using OpenIddict.Core;
+using TecMeet.OpenIddict.LinqToDB;
+using TecMeet.OpenIddict.LinqToDB.Models;
 using Xunit;
 
 namespace OpenIddict.LinqToDB.Tests;
 
-public class OpenIddictMongoDbTokenStoreResolverTests
+public class OpenIddictLinqToDBTokenStoreResolverTests
 {
     [Fact]
     public void Get_ReturnsCustomStoreCorrespondingToTheSpecifiedTypeWhenAvailable()
@@ -21,8 +25,9 @@ public class OpenIddictMongoDbTokenStoreResolverTests
         var services = new ServiceCollection();
         services.AddSingleton(Mock.Of<IOpenIddictTokenStore<CustomToken>>());
 
+        var options = Mock.Of<IOptionsMonitor<OpenIddictCoreOptions>>();
         var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictMongoDbTokenStoreResolver(provider);
+        var resolver = new OpenIddictLinqToDBTokenStoreResolver(options, provider);
 
         // Act and assert
         Assert.NotNull(resolver.Get<CustomToken>());
@@ -34,36 +39,24 @@ public class OpenIddictMongoDbTokenStoreResolverTests
         // Arrange
         var services = new ServiceCollection();
 
+        var options = Mock.Of<IOptionsMonitor<OpenIddictCoreOptions>>();
         var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictMongoDbTokenStoreResolver(provider);
+        var resolver = new OpenIddictLinqToDBTokenStoreResolver(options, provider);
 
         // Act and assert
         var exception = Assert.Throws<InvalidOperationException>(resolver.Get<CustomToken>);
 
-        Assert.Equal(SR.GetResourceString(SR.ID0260), exception.Message);
+        Assert.Equal(SR.GetResourceString(SR.ID0256), exception.Message);
     }
 
-    [Fact]
-    public void Get_ReturnsDefaultStoreCorrespondingToTheSpecifiedTypeWhenAvailable()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        services.AddSingleton(Mock.Of<IOpenIddictTokenStore<CustomToken>>());
-        services.AddSingleton(CreateStore());
-
-        var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictMongoDbTokenStoreResolver(provider);
-
-        // Act and assert
-        Assert.NotNull(resolver.Get<MyToken>());
-    }
-
-    private static OpenIddictMongoDbTokenStore<MyToken> CreateStore()
-        => new Mock<OpenIddictMongoDbTokenStore<MyToken>>(
-            Mock.Of<IOpenIddictMongoDbContext>(),
-            Mock.Of<IOptionsMonitor<OpenIddictMongoDbOptions>>()).Object;
+    private static OpenIddictLinqToDBTokenStore<MyToken, MyApplication, MyAuthorization, long> CreateStore()
+        => new Mock<OpenIddictLinqToDBTokenStore<MyToken, MyApplication, MyAuthorization, long>>(
+            Mock.Of<IMemoryCache>(),
+            Mock.Of<IDataContext>()).Object;
 
     public class CustomToken { }
 
-    public class MyToken : OpenIddictMongoDbToken { }
+    public class MyApplication : OpenIddictLinqToDBApplication<long> { }
+    public class MyAuthorization : OpenIddictLinqToDBAuthorization<long> { }
+    public class MyToken : OpenIddictLinqToDBToken<long> { }
 }

@@ -7,6 +7,8 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using OpenIddict.Core;
+using OpenIddict.Extensions;
 using TecMeet.OpenIddict.LinqToDB.Models;
 
 namespace TecMeet.OpenIddict.LinqToDB;
@@ -17,14 +19,14 @@ namespace TecMeet.OpenIddict.LinqToDB;
 public class OpenIddictLinqToDBApplicationStoreResolver : IOpenIddictApplicationStoreResolver
 {
     private readonly ConcurrentDictionary<Type, Type> _cache = new();
-    private readonly IOptionsMonitor<OpenIddictLinqToDBOptions> _options;
+    private readonly IOptionsMonitor<OpenIddictCoreOptions> _options;
     private readonly IServiceProvider _provider;
 
     public OpenIddictLinqToDBApplicationStoreResolver(
-        IOptionsMonitor<OpenIddictLinqToDBOptions> options,
+        IOptionsMonitor<OpenIddictCoreOptions> options,
         IServiceProvider provider)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _options = options;
         _provider = provider ?? throw new ArgumentNullException(nameof(provider));
     }
 
@@ -44,12 +46,14 @@ public class OpenIddictLinqToDBApplicationStoreResolver : IOpenIddictApplication
 
         var type = _cache.GetOrAdd(typeof(TApplication), key =>
         {
-            if (!typeof(OpenIddictLinqToDBApplication).IsAssignableFrom(key))
-            {
-                throw new InvalidOperationException(SR.GetResourceString(SR.ID0257));
-            }
+            var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictLinqToDBApplication<>)) ??
+                       throw new InvalidOperationException(SR.GetResourceString(SR.ID0256));
 
-            return typeof(OpenIddictLinqToDBApplicationStore<>).MakeGenericType(key);
+            return typeof(OpenIddictLinqToDBApplicationStore<,,,>).MakeGenericType(
+                /* TApplication: */ key,
+                /* TAuthorization: */ _options.CurrentValue.DefaultAuthorizationType!,
+                /* TToken: */ _options.CurrentValue.DefaultTokenType!,
+                /* TKey: */ root.GenericTypeArguments[0]);
         });
 
         return (IOpenIddictApplicationStore<TApplication>) _provider.GetRequiredService(type);

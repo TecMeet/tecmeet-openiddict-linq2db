@@ -22,18 +22,15 @@ namespace TecMeet.OpenIddict.LinqToDB;
 /// <summary>
 /// Provides methods allowing to manage the authorizations stored in a database.
 /// </summary>
-/// <typeparam name="TContext">The type of the LinqToDB database context.</typeparam>
-public class OpenIddictLinqToDBAuthorizationStore<TContext> :
+public class OpenIddictLinqToDBAuthorizationStore :
     OpenIddictLinqToDBAuthorizationStore<OpenIddictLinqToDBAuthorization,
                                                     OpenIddictLinqToDBApplication,
-                                                    OpenIddictLinqToDBToken, TContext, string>
-    where TContext : IDataContext
+                                                    OpenIddictLinqToDBToken, string>
 {
     public OpenIddictLinqToDBAuthorizationStore(
         IMemoryCache cache,
-        TContext context,
-        IOptionsMonitor<OpenIddictLinqToDBOptions> options)
-        : base(cache, context, options)
+        IDataContext context)
+        : base(cache, context)
     {
     }
 }
@@ -41,20 +38,17 @@ public class OpenIddictLinqToDBAuthorizationStore<TContext> :
 /// <summary>
 /// Provides methods allowing to manage the authorizations stored in a database.
 /// </summary>
-/// <typeparam name="TContext">The type of the LinqToDB database context.</typeparam>
 /// <typeparam name="TKey">The type of the entity primary keys.</typeparam>
-public class OpenIddictLinqToDBAuthorizationStore<TContext, TKey> :
+public class OpenIddictLinqToDBAuthorizationStore<TKey> :
     OpenIddictLinqToDBAuthorizationStore<OpenIddictLinqToDBAuthorization<TKey>,
                                                     OpenIddictLinqToDBApplication<TKey>,
-                                                    OpenIddictLinqToDBToken<TKey>, TContext, TKey>
-    where TContext : IDataContext
+                                                    OpenIddictLinqToDBToken<TKey>, TKey>
     where TKey : notnull, IEquatable<TKey>
 {
     public OpenIddictLinqToDBAuthorizationStore(
         IMemoryCache cache,
-        TContext context,
-        IOptionsMonitor<OpenIddictLinqToDBOptions> options)
-        : base(cache, context, options)
+        IDataContext context)
+        : base(cache, context)
     {
     }
 }
@@ -65,23 +59,19 @@ public class OpenIddictLinqToDBAuthorizationStore<TContext, TKey> :
 /// <typeparam name="TAuthorization">The type of the Authorization entity.</typeparam>
 /// <typeparam name="TApplication">The type of the Application entity.</typeparam>
 /// <typeparam name="TToken">The type of the Token entity.</typeparam>
-/// <typeparam name="TContext">The type of the LinqToDB database context.</typeparam>
 /// <typeparam name="TKey">The type of the entity primary keys.</typeparam>
-public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, TToken, TContext, TKey> : IOpenIddictAuthorizationStore<TAuthorization>
+public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, TToken, TKey> : IOpenIddictAuthorizationStore<TAuthorization>
     where TAuthorization : OpenIddictLinqToDBAuthorization<TKey>
     where TApplication : OpenIddictLinqToDBApplication<TKey>
     where TToken : OpenIddictLinqToDBToken<TKey>
-    where TContext : IDataContext
     where TKey : notnull, IEquatable<TKey>
 {
     public OpenIddictLinqToDBAuthorizationStore(
         IMemoryCache cache,
-        TContext context,
-        IOptionsMonitor<OpenIddictLinqToDBOptions> options)
+        IDataContext context)
     {
         Cache = cache ?? throw new ArgumentNullException(nameof(cache));
         Context = context ?? throw new ArgumentNullException(nameof(context));
-        Options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
     /// <summary>
@@ -92,12 +82,7 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
     /// <summary>
     /// Gets the database context associated with the current store.
     /// </summary>
-    protected TContext Context { get; }
-
-    /// <summary>
-    /// Gets the options associated with the current store.
-    /// </summary>
-    protected IOptionsMonitor<OpenIddictLinqToDBOptions> Options { get; }
+    protected IDataContext Context { get; }
 
     /// <summary>
     /// Gets the database set corresponding to the <typeparamref name="TApplication"/> entity.

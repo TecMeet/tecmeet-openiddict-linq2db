@@ -7,15 +7,13 @@
 using LinqToDB.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Moq;
 using OpenIddict.Core;
-using TecMeet.OpenIddict.LinqToDB;
 using TecMeet.OpenIddict.LinqToDB.Models;
 using Xunit;
 
 namespace OpenIddict.LinqToDB.Tests;
 
-public class OpenIddictMongoDbBuilderTests
+public class OpenIddictLinqToDBBuilderTests
 {
     [Fact]
     public void Constructor_ThrowsAnExceptionForNullServices()
@@ -87,57 +85,6 @@ public class OpenIddictMongoDbBuilderTests
         Assert.Equal(typeof(CustomAuthorizationInt), options.DefaultAuthorizationType);
         Assert.Equal(typeof(CustomScopeInt), options.DefaultScopeType);
         Assert.Equal(typeof(CustomTokenInt), options.DefaultTokenType);
-    }
-
-    [Fact]
-    public void Configure_DataContextCorrectlySet()
-    {
-        // Arrange
-        var services = CreateServices();
-        var builder = CreateBuilder(services);
-
-        // Act
-        builder.Configure(options => options.DbContextType = typeof(DataContext));
-
-        // Assert
-        var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<IOptionsMonitor<OpenIddictLinqToDBOptions>>().CurrentValue;
-
-        Assert.Equal(typeof(DataContext), options.DbContextType);
-    }
-
-    [Fact]
-    public void UseDbContext_TypeParam_DataContextCorrectlySet()
-    {
-        // Arrange
-        var services = CreateServices();
-        var builder = CreateBuilder(services);
-
-        // Act
-        builder.UseDbContext(typeof(DataContext));
-
-        // Assert
-        var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<IOptionsMonitor<OpenIddictLinqToDBOptions>>().CurrentValue;
-
-        Assert.Equal(typeof(DataContext), options.DbContextType);
-    }
-
-    [Fact]
-    public void UseDbContext_Generic_DataContextCorrectlySet()
-    {
-        // Arrange
-        var services = CreateServices();
-        var builder = CreateBuilder(services);
-
-        // Act
-        builder.UseDbContext<DataContext>();
-
-        // Assert
-        var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<IOptionsMonitor<OpenIddictLinqToDBOptions>>().CurrentValue;
-
-        Assert.Equal(typeof(DataContext), options.DbContextType);
     }
 
     private static OpenIddictLinqToDBBuilder CreateBuilder(IServiceCollection services)

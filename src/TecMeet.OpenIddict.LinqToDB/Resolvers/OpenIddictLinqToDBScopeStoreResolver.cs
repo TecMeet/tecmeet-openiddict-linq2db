@@ -7,6 +7,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using OpenIddict.Core;
 using OpenIddict.Extensions;
 using TecMeet.OpenIddict.LinqToDB.Models;
 
@@ -18,14 +19,11 @@ namespace TecMeet.OpenIddict.LinqToDB;
 public class OpenIddictLinqToDBScopeStoreResolver : IOpenIddictScopeStoreResolver
 {
     private readonly ConcurrentDictionary<Type, Type> _cache = new();
-    private readonly IOptionsMonitor<OpenIddictLinqToDBOptions> _options;
     private readonly IServiceProvider _provider;
 
     public OpenIddictLinqToDBScopeStoreResolver(
-        IOptionsMonitor<OpenIddictLinqToDBOptions> options,
         IServiceProvider provider)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
         _provider = provider ?? throw new ArgumentNullException(nameof(provider));
     }
 
@@ -45,12 +43,12 @@ public class OpenIddictLinqToDBScopeStoreResolver : IOpenIddictScopeStoreResolve
 
         var type = _cache.GetOrAdd(typeof(TScope), key =>
         {
-            if (!typeof(OpenIddictLinqToDBScope).IsAssignableFrom(key))
-            {
-                throw new InvalidOperationException(SR.GetResourceString(SR.ID0259));
-            }
+            var root = OpenIddictHelpers.FindGenericBaseType(key, typeof(OpenIddictLinqToDBScope<>)) ??
+                       throw new InvalidOperationException(SR.GetResourceString(SR.ID0256));
 
-            return typeof(OpenIddictLinqToDBScopeStore<>).MakeGenericType(key);
+            return typeof(OpenIddictLinqToDBScopeStore<,>).MakeGenericType(
+                /* TScope: */ key,
+                /* TKey: */ root.GenericTypeArguments[0]);
         });
 
         return (IOpenIddictScopeStore<TScope>) _provider.GetRequiredService(type);

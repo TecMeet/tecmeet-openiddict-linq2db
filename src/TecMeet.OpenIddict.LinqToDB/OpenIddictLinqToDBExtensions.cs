@@ -51,10 +51,10 @@ public static class OpenIddictLinqToDBExtensions
             .ReplaceScopeStoreResolver<OpenIddictLinqToDBScopeStoreResolver>(ServiceLifetime.Singleton)
             .ReplaceTokenStoreResolver<OpenIddictLinqToDBTokenStoreResolver>(ServiceLifetime.Singleton);
 
-        builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBApplicationStore<,,,,>));
-        builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBAuthorizationStore<,,,,>));
-        builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBScopeStore<,,>));
-        builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBTokenStore<,,,,>));
+        builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBApplicationStore<,,,>));
+        builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBAuthorizationStore<,,,>));
+        builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBScopeStore<,>));
+        builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBTokenStore<,,,>));
 
         return new OpenIddictLinqToDBBuilder(builder.Services);
     }
