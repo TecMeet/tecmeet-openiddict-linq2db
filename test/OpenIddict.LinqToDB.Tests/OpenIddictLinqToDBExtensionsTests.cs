@@ -81,10 +81,10 @@ public class OpenIddictLinqToDBExtensionsTests
     }
 
     [Theory]
-    [InlineData(typeof(OpenIddictLinqToDBApplicationStore<>))]
-    [InlineData(typeof(OpenIddictLinqToDBAuthorizationStore<>))]
-    [InlineData(typeof(OpenIddictLinqToDBScopeStore<>))]
-    [InlineData(typeof(OpenIddictLinqToDBTokenStore<>))]
+    [InlineData(typeof(OpenIddictLinqToDBApplicationStore<,,,>))]
+    [InlineData(typeof(OpenIddictLinqToDBAuthorizationStore<,,,>))]
+    [InlineData(typeof(OpenIddictLinqToDBScopeStore<,>))]
+    [InlineData(typeof(OpenIddictLinqToDBTokenStore<,,,>))]
     public void UseLinqToDB_RegistersLinqToDBStore(Type type)
     {
         // Arrange
