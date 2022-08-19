@@ -1,3 +1,5 @@
+Copyright 2022 Timmy Braun and others, especially Kévin Chalet from
+whom I've copied and adapted much of the code.
 
                                  Apache License
                            Version 2.0, January 2004
