@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <StrongNameKeyId>TecMeet.OpenIddict.LinqToDB</StrongNameKeyId>
+    <StrongNameKeyId>TecMeet.OpenIddict</StrongNameKeyId>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)eng\key.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
