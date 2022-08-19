@@ -18,74 +18,7 @@ namespace LinqToDB;
 /// </summary>
 public static class OpenIddictLinqToDBHelpers
 {
-    /// <summary>
-    /// Registers the OpenIddict entity sets in the LinqToDB context
-    /// using the default OpenIddict models and the default key type (string).
-    /// </summary>
-    /// <param name="builder">The builder used to configure the LinqToDB context.</param>
-    /// <param name="dbOptions">Set this parameter if you want to use different database table names. See <see cref="OpenIddictLinqToDBNameOptions"/></param>
-    /// <returns>The LinqToDB context builder.</returns>
-    public static LinqToDBConnectionOptionsBuilder UseOpenIddict(this LinqToDBConnectionOptionsBuilder builder, 
-        OpenIddictLinqToDBNameOptions? dbOptions = null)
-        => builder.UseOpenIddict<string>(dbOptions);
-
-    /// <summary>
-    /// Registers the OpenIddict entity sets in the LinqToDB 
-    /// context using the default OpenIddict models and the specified key type.
-    /// </summary>
-    /// <remarks>
-    /// Note: when using a custom key type, the new key type MUST be registered by calling
-    /// <see cref="OpenIddictLinqToDBBuilder.ReplaceDefaultEntities{TKey}"/>.
-    /// </remarks>
-    /// <param name="builder">The builder used to configure the LinqToDB context.</param>
-    /// <param name="dbOptions">Set this parameter if you want to use different database table names. See <see cref="OpenIddictLinqToDBNameOptions"/></param>
-    /// <returns>The LinqToDB context builder.</returns>
-    public static LinqToDBConnectionOptionsBuilder UseOpenIddict<TKey>(this LinqToDBConnectionOptionsBuilder builder, 
-        OpenIddictLinqToDBNameOptions? dbOptions = null)
-        where TKey : notnull, IEquatable<TKey>
-        => builder.UseOpenIddict<OpenIddictLinqToDBApplication<TKey>,
-            OpenIddictLinqToDBAuthorization<TKey>,
-            OpenIddictLinqToDBScope<TKey>,
-            OpenIddictLinqToDBToken<TKey>, TKey>(dbOptions);
-
-    /// <summary>
-    /// Registers the OpenIddict entity sets in the LinqToDB
-    /// context using the specified entities and the specified key type.
-    /// </summary>
-    /// <remarks>
-    /// Note: when using custom entities, the new entities MUST be registered by calling
-    /// <see cref="OpenIddictLinqToDBBuilder.ReplaceDefaultEntities{TApplication, TAuthorization, TScope, TToken, TKey}"/>.
-    /// </remarks>
-    /// <param name="builder">The builder used to configure the LinqToDB context.</param>
-    /// <param name="dbOptions">Set this parameter if you want to use different database table names. See <see cref="OpenIddictLinqToDBNameOptions"/></param>
-    /// <returns>The LinqToDB context builder.</returns>
-    public static LinqToDBConnectionOptionsBuilder UseOpenIddict<TApplication, TAuthorization, TScope, TToken, TKey>(
-        this LinqToDBConnectionOptionsBuilder builder, OpenIddictLinqToDBNameOptions? dbOptions = null)
-        where TApplication : OpenIddictLinqToDBApplication<TKey>
-        where TAuthorization : OpenIddictLinqToDBAuthorization<TKey>
-        where TScope : OpenIddictLinqToDBScope<TKey>
-        where TToken : OpenIddictLinqToDBToken<TKey>
-        where TKey : notnull, IEquatable<TKey>
-    {
-        if (builder is null)
-        {
-            throw new ArgumentNullException(nameof(builder));
-        }
-
-        var options = dbOptions ?? new OpenIddictLinqToDBNameOptions();
-
-        var schema = builder.MappingSchema;
-        if (schema == null) return builder;
-
-        schema.GetFluentMappingBuilder()
-            .ConfigureApplicationMapping<TKey, TApplication>(options.ApplicationsTableName)
-            .ConfigureAuthorizationMapping<TKey, TAuthorization>(options.AuthorizationsTableName)
-            .ConfigureScopeMapping<TKey, TScope>(options.ScopesTableName)
-            .ConfigureTokenMapping<TKey, TToken>(options.TokensTableName);
-
-        return builder;
-    }
-
+    
 #if SUPPORTS_BCL_ASYNC_ENUMERABLE
     /// <summary>
     /// Executes the query and returns the results as a streamed async enumeration.
