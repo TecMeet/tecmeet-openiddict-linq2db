@@ -11,24 +11,112 @@ me](https://github.com/openiddict/openiddict-core/issues/1503) to create and mai
 <PackageReference Include="TecMeet.OpenIddict.LinqToDB" Version="1.0.0" />
 ```
 
+#### Configure table mappings for LinqToDB:
+```csharp
+services.AddLinqToDBContext<DbContext>((provider, options) =>
+    {
+        options.UsePostgreSQL(connectionString);
+        options.UseDefaultLogging(provider);
+        
+        // The LinqToDB MappingSchema. Use MappingSchema.Default if you
+        // have not set up your own separate schema.
+        options.UseOpenIddict(MappingSchema.Default);
+        
+        // Or, also set the table names if you want to use something else
+        // than the default.
+        // options.UseOpenIddict(MappingSchema.Default, new OpenIddictLinqToDBNameOptions
+        // {
+        //     ApplicationsTableName = "auth_openiddict_applications",
+        //     AuthorizationsTableName = "auth_openiddict_authorizations",
+        //     ScopesTableName = "auth_openiddict_scopes",
+        //     TokensTableName = "auth_openiddict_tokens"
+        // });
+    });
+```
+
 #### Configure OpenIddict to use LinqToDB stores:
 ```csharp
-    services.AddOpenIddict()
-        .AddCore(options =>
-        {
-            options.UseLinqToDB()
-                   .UseDbContext<MyDataContext>();
-        });
+services.AddOpenIddict()
+    .AddCore(options =>
+    {
+        options.UseLinqToDB();
+    });
 ```
 
 #### Add the needed database tables
-This is the SQL needed to create the tables **OpenIddict** uses for `string` primary key types. You
+This is the SQL needed for PostgreSQL to create the tables **OpenIddict** uses for `string` primary key types. You
 can also use other key types but you need to also adapt the configuration code for that.
 <details>
 <summary>SQL table creation code</summary>
 
 ```postgresql
+CREATE TABLE auth_openiddict_applications
+(
+    type                      text      NULL,
+    requirements              text      NULL,
+    redirect_uris             text      NULL,
+    properties                text      NULL,
+    post_logout_redirect_uris text      NULL,
+    permissions               text      NULL,
+    id                        text  NOT NULL DEFAULT gen_random_uuid(),
+    display_names             text      NULL,
+    display_name              text      NULL,
+    consent_type              text      NULL,
+    concurrency_token         text      NULL,
+    client_secret             text      NULL,
+    client_id                 text      NULL,
+    
+    CONSTRAINT "PK_auth_openiddict_applications" PRIMARY KEY (id)
+);
 
+CREATE TABLE auth_openiddict_authorizations
+(
+    type              text           NULL,
+    subject           text           NULL,
+    status            text           NULL,
+    scopes            text           NULL,
+    properties        text           NULL,
+    id                text       NOT NULL DEFAULT gen_random_uuid(),
+    creation_date     TimeStamp      NULL,
+    concurrency_token text           NULL,
+    application_id    text           NULL,
+
+    CONSTRAINT "PK_auth_openiddict_authorizations" PRIMARY KEY (id)
+);
+
+CREATE TABLE auth_openiddict_scopes
+(
+    resources         text      NULL,
+    properties        text      NULL,
+    name              text      NULL,
+    id                text  NOT NULL DEFAULT gen_random_uuid(),
+    display_names     text      NULL,
+    display_name      text      NULL,
+    descriptions      text      NULL,
+    description       text      NULL,
+    concurrency_token text      NULL,
+
+    CONSTRAINT "PK_auth_openiddict_scopes" PRIMARY KEY (id)
+);
+
+CREATE TABLE auth_openiddict_tokens
+(
+    type              text           NULL,
+    subject           text           NULL,
+    status            text           NULL,
+    reference_id      text           NULL,
+    redemption_date   TimeStamp      NULL,
+    properties        text           NULL,
+    payload           text           NULL,
+    id                text       NOT NULL DEFAULT gen_random_uuid(),
+    expiration_date   TimeStamp      NULL,
+    creation_date     TimeStamp      NULL,
+    concurrency_token text           NULL,
+    authorization_id  text           NULL,
+    application_id    text           NULL,
+
+    CONSTRAINT "PK_auth_openiddict_tokens" PRIMARY KEY (id)
+);
 ```
 </details>
 
