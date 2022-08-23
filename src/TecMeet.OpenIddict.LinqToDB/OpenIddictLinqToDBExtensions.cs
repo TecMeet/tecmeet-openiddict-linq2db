@@ -5,12 +5,14 @@
  */
 
 using LinqToDB.Configuration;
+using LinqToDB.Mapping;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenIddict.LinqToDB;
 using TecMeet.OpenIddict.LinqToDB;
 using TecMeet.OpenIddict.LinqToDB.Models;
 
-namespace Microsoft.Extensions.DependencyInjection;
+namespace TecMeet.OpenIddict.LinqToDB;
 
 /// <summary>
 /// Exposes extensions allowing to register the OpenIddict LinqToDB services.
@@ -86,17 +88,18 @@ public static class OpenIddictLinqToDBExtensions
 
         return builder;
     }
-    
+
     /// <summary>
     /// Registers the OpenIddict entity sets in the LinqToDB context
     /// using the default OpenIddict models and the default key type (string).
     /// </summary>
     /// <param name="builder">The builder used to configure the LinqToDB context.</param>
+    /// <param name="mappingSchema">The LinqToDB MappingSchema that you're using. If it's not customized you can use MappingSchema.Default</param>
     /// <param name="dbOptions">Set this parameter if you want to use different database table names. See <see cref="OpenIddictLinqToDBNameOptions"/></param>
     /// <returns>The LinqToDB context builder.</returns>
     public static LinqToDBConnectionOptionsBuilder UseOpenIddict(this LinqToDBConnectionOptionsBuilder builder, 
-        OpenIddictLinqToDBNameOptions? dbOptions = null)
-        => builder.UseOpenIddict<string>(dbOptions);
+        MappingSchema mappingSchema, OpenIddictLinqToDBNameOptions? dbOptions = null)
+        => builder.UseOpenIddict<string>(mappingSchema, dbOptions);
 
     /// <summary>
     /// Registers the OpenIddict entity sets in the LinqToDB 
@@ -107,15 +110,16 @@ public static class OpenIddictLinqToDBExtensions
     /// <see cref="OpenIddictLinqToDBBuilder.ReplaceDefaultEntities{TKey}"/>.
     /// </remarks>
     /// <param name="builder">The builder used to configure the LinqToDB context.</param>
+    /// <param name="mappingSchema">The LinqToDB MappingSchema that you're using. If it's not customized you can use MappingSchema.Default</param>
     /// <param name="dbOptions">Set this parameter if you want to use different database table names. See <see cref="OpenIddictLinqToDBNameOptions"/></param>
     /// <returns>The LinqToDB context builder.</returns>
     public static LinqToDBConnectionOptionsBuilder UseOpenIddict<TKey>(this LinqToDBConnectionOptionsBuilder builder, 
-        OpenIddictLinqToDBNameOptions? dbOptions = null)
+        MappingSchema mappingSchema, OpenIddictLinqToDBNameOptions? dbOptions = null)
         where TKey : notnull, IEquatable<TKey>
         => builder.UseOpenIddict<OpenIddictLinqToDBApplication<TKey>,
             OpenIddictLinqToDBAuthorization<TKey>,
             OpenIddictLinqToDBScope<TKey>,
-            OpenIddictLinqToDBToken<TKey>, TKey>(dbOptions);
+            OpenIddictLinqToDBToken<TKey>, TKey>(mappingSchema, dbOptions);
 
     /// <summary>
     /// Registers the OpenIddict entity sets in the LinqToDB
@@ -127,9 +131,10 @@ public static class OpenIddictLinqToDBExtensions
     /// </remarks>
     /// <param name="builder">The builder used to configure the LinqToDB context.</param>
     /// <param name="dbOptions">Set this parameter if you want to use different database table names. See <see cref="OpenIddictLinqToDBNameOptions"/></param>
+    /// <param name="mappingSchema">The LinqToDB MappingSchema that you're using. If it's not customized you can use MappingSchema.Default</param>
     /// <returns>The LinqToDB context builder.</returns>
     public static LinqToDBConnectionOptionsBuilder UseOpenIddict<TApplication, TAuthorization, TScope, TToken, TKey>(
-        this LinqToDBConnectionOptionsBuilder builder, OpenIddictLinqToDBNameOptions? dbOptions = null)
+        this LinqToDBConnectionOptionsBuilder builder, MappingSchema mappingSchema, OpenIddictLinqToDBNameOptions? dbOptions = null)
         where TApplication : OpenIddictLinqToDBApplication<TKey>
         where TAuthorization : OpenIddictLinqToDBAuthorization<TKey>
         where TScope : OpenIddictLinqToDBScope<TKey>
@@ -143,10 +148,7 @@ public static class OpenIddictLinqToDBExtensions
 
         var options = dbOptions ?? new OpenIddictLinqToDBNameOptions();
 
-        var schema = builder.MappingSchema;
-        if (schema == null) return builder;
-
-        schema.GetFluentMappingBuilder()
+        mappingSchema.GetFluentMappingBuilder()
             .ConfigureApplicationMapping<TKey, TApplication>(options.ApplicationsTableName)
             .ConfigureAuthorizationMapping<TKey, TAuthorization>(options.AuthorizationsTableName)
             .ConfigureScopeMapping<TKey, TScope>(options.ScopesTableName)
