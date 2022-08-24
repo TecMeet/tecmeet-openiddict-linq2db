@@ -25,9 +25,10 @@ public class OpenIddictLinqToDBApplicationStoreResolverTests
         var services = new ServiceCollection();
         services.AddSingleton(Mock.Of<IOpenIddictApplicationStore<CustomApplication>>());
 
+        var typeCache = Mock.Of<OpenIddictLinqToDBApplicationStoreResolver.TypeResolutionCache>();
         var options = Mock.Of<IOptionsMonitor<OpenIddictCoreOptions>>();
         var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictLinqToDBApplicationStoreResolver(options, provider);
+        var resolver = new OpenIddictLinqToDBApplicationStoreResolver(typeCache, options, provider);
 
         // Act and assert
         Assert.NotNull(resolver.Get<CustomApplication>());
@@ -39,9 +40,10 @@ public class OpenIddictLinqToDBApplicationStoreResolverTests
         // Arrange
         var services = new ServiceCollection();
 
+        var typeCache = Mock.Of<OpenIddictLinqToDBApplicationStoreResolver.TypeResolutionCache>();
         var options = Mock.Of<IOptionsMonitor<OpenIddictCoreOptions>>();
         var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictLinqToDBApplicationStoreResolver(options, provider);
+        var resolver = new OpenIddictLinqToDBApplicationStoreResolver(typeCache, options, provider);
 
         // Act and assert
         var exception = Assert.Throws<InvalidOperationException>(resolver.Get<CustomApplication>);
@@ -64,8 +66,9 @@ public class OpenIddictLinqToDBApplicationStoreResolverTests
                 DefaultAuthorizationType = typeof(MyAuthorization)
             });
         
+        var typeCache = Mock.Of<OpenIddictLinqToDBApplicationStoreResolver.TypeResolutionCache>();
         var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictLinqToDBApplicationStoreResolver(options, provider);
+        var resolver = new OpenIddictLinqToDBApplicationStoreResolver(typeCache, options, provider);
 
         // Act and assert
         Assert.NotNull(resolver.Get<MyApplication>());

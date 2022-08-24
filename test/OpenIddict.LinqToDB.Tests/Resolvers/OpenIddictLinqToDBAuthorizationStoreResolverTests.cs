@@ -25,9 +25,10 @@ public class OpenIddictLinqToDBAuthorizationStoreResolverTests
         var services = new ServiceCollection();
         services.AddSingleton(Mock.Of<IOpenIddictAuthorizationStore<CustomApplication>>());
 
+        var typeCache = Mock.Of<OpenIddictLinqToDBAuthorizationStoreResolver.TypeResolutionCache>();
         var options = Mock.Of<IOptionsMonitor<OpenIddictCoreOptions>>();
         var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictLinqToDBAuthorizationStoreResolver(options, provider);
+        var resolver = new OpenIddictLinqToDBAuthorizationStoreResolver(typeCache, options, provider);
 
         // Act and assert
         Assert.NotNull(resolver.Get<CustomApplication>());
@@ -39,9 +40,10 @@ public class OpenIddictLinqToDBAuthorizationStoreResolverTests
         // Arrange
         var services = new ServiceCollection();
 
+        var typeCache = Mock.Of<OpenIddictLinqToDBAuthorizationStoreResolver.TypeResolutionCache>();
         var options = Mock.Of<IOptionsMonitor<OpenIddictCoreOptions>>();
         var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictLinqToDBAuthorizationStoreResolver(options, provider);
+        var resolver = new OpenIddictLinqToDBAuthorizationStoreResolver(typeCache, options, provider);
 
         // Act and assert
         var exception = Assert.Throws<InvalidOperationException>(resolver.Get<CustomApplication>);
@@ -57,6 +59,7 @@ public class OpenIddictLinqToDBAuthorizationStoreResolverTests
         services.AddSingleton(Mock.Of<IOpenIddictAuthorizationStore<CustomApplication>>());
         services.AddSingleton(CreateStore());
 
+        var typeCache = Mock.Of<OpenIddictLinqToDBAuthorizationStoreResolver.TypeResolutionCache>();
         var options = Mock.Of<IOptionsMonitor<OpenIddictCoreOptions>>(
             mock => mock.CurrentValue == new OpenIddictCoreOptions
             {
@@ -64,7 +67,7 @@ public class OpenIddictLinqToDBAuthorizationStoreResolverTests
                 DefaultApplicationType = typeof(MyApplication)
             });
         var provider = services.BuildServiceProvider();
-        var resolver = new OpenIddictLinqToDBAuthorizationStoreResolver(options, provider);
+        var resolver = new OpenIddictLinqToDBAuthorizationStoreResolver(typeCache, options, provider);
 
         // Act and assert
         Assert.NotNull(resolver.Get<MyAuthorization>());

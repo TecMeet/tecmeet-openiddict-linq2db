@@ -18,12 +18,14 @@ namespace TecMeet.OpenIddict.LinqToDB;
 /// </summary>
 public class OpenIddictLinqToDBScopeStoreResolver : IOpenIddictScopeStoreResolver
 {
-    private readonly ConcurrentDictionary<Type, Type> _cache = new();
+    private readonly TypeResolutionCache _cache;
     private readonly IServiceProvider _provider;
 
     public OpenIddictLinqToDBScopeStoreResolver(
+        TypeResolutionCache cache,
         IServiceProvider provider)
     {
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         _provider = provider ?? throw new ArgumentNullException(nameof(provider));
     }
 
@@ -53,4 +55,10 @@ public class OpenIddictLinqToDBScopeStoreResolver : IOpenIddictScopeStoreResolve
 
         return (IOpenIddictScopeStore<TScope>) _provider.GetRequiredService(type);
     }
+    
+    // Note: LinqToDB resolvers are registered as scoped dependencies as their inner
+    // service provider must be able to resolve scoped services (typically, the store they return).
+    // To avoid having to declare a static type resolution cache, a special cache service is used
+    // here and registered as a singleton dependency so that its content persists beyond the scope.
+    public class TypeResolutionCache : ConcurrentDictionary<Type, Type> { }
 }

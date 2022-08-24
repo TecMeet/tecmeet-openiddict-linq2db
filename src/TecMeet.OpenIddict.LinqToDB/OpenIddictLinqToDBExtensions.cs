@@ -48,12 +48,10 @@ public static class OpenIddictLinqToDBExtensions
                .ReplaceScopeStoreResolver<OpenIddictLinqToDBScopeStoreResolver>()
                .ReplaceTokenStoreResolver<OpenIddictLinqToDBTokenStoreResolver>();
 
-        // Note: the stores/resolvers don't depend on scoped/transient services and thus
-        // can be safely registered as singleton services and shared/reused across requests.
-        builder.ReplaceApplicationStoreResolver<OpenIddictLinqToDBApplicationStoreResolver>(ServiceLifetime.Singleton)
-            .ReplaceAuthorizationStoreResolver<OpenIddictLinqToDBAuthorizationStoreResolver>(ServiceLifetime.Singleton)
-            .ReplaceScopeStoreResolver<OpenIddictLinqToDBScopeStoreResolver>(ServiceLifetime.Singleton)
-            .ReplaceTokenStoreResolver<OpenIddictLinqToDBTokenStoreResolver>(ServiceLifetime.Singleton);
+        builder.Services.TryAddSingleton<OpenIddictLinqToDBApplicationStoreResolver.TypeResolutionCache>();
+        builder.Services.TryAddSingleton<OpenIddictLinqToDBAuthorizationStoreResolver.TypeResolutionCache>();
+        builder.Services.TryAddSingleton<OpenIddictLinqToDBScopeStoreResolver.TypeResolutionCache>();
+        builder.Services.TryAddSingleton<OpenIddictLinqToDBTokenStoreResolver.TypeResolutionCache>();
 
         builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBApplicationStore<,,,>));
         builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBAuthorizationStore<,,,>));
