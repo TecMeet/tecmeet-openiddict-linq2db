@@ -119,7 +119,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
             throw new ArgumentNullException(nameof(token));
         }
 
-        await Context.InsertAsync(token, token: cancellationToken);
+        token.Id = (TKey) await Context.InsertWithIdentityAsync(token, token: cancellationToken);
     }
 
     /// <inheritdoc/>
