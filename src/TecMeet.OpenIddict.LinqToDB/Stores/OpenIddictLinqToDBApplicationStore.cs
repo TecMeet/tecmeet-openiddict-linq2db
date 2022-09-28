@@ -123,7 +123,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
             throw new ArgumentNullException(nameof(application));
         }
 
-        await Context.InsertAsync(application, token: cancellationToken);
+        application.Id = (TKey) await Context.InsertWithIdentityAsync(application, token: cancellationToken);
     }
 
     /// <inheritdoc/>

@@ -122,7 +122,7 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
             throw new ArgumentNullException(nameof(authorization));
         }
 
-        await Context.InsertAsync(authorization, token: cancellationToken);
+        authorization.Id = (TKey) await Context.InsertWithIdentityAsync(authorization, token: cancellationToken);
     }
 
     /// <inheritdoc/>

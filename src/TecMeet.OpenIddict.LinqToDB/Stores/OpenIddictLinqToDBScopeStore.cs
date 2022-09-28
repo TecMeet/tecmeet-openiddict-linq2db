@@ -101,7 +101,7 @@ public class OpenIddictLinqToDBScopeStore<TScope, TKey> : IOpenIddictScopeStore<
             throw new ArgumentNullException(nameof(scope));
         }
 
-        await Context.InsertAsync(scope, token: cancellationToken);
+        scope.Id = (TKey) await Context.InsertWithIdentityAsync(scope, token: cancellationToken);
     }
 
     /// <inheritdoc/>
