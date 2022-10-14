@@ -14,4 +14,8 @@
     <Using Remove="System.Net.Http" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NodaTime" Version="3.1.4" />
+  </ItemGroup>
+
 </Project>

@@ -5,6 +5,7 @@
  */
 
 using System.Diagnostics;
+using NodaTime;
 
 namespace TecMeet.OpenIddict.LinqToDB.Models;
 
@@ -33,7 +34,7 @@ public class OpenIddictLinqToDBAuthorization<TKey>
     /// <summary>
     /// Gets or sets the UTC creation date of the current authorization.
     /// </summary>
-    public virtual DateTime? CreationDate { get; set; }
+    public virtual Instant? CreationDate { get; set; }
 
     /// <summary>
     /// Gets or sets the unique identifier associated with the current authorization.

@@ -14,6 +14,7 @@ using System.Text.Json;
 using LinqToDB;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using NodaTime;
 using TecMeet.OpenIddict.LinqToDB.Models;
 using static OpenIddict.Abstractions.OpenIddictExceptions;
 
@@ -363,7 +364,7 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
             return new(result: null);
         }
 
-        return new(DateTime.SpecifyKind(authorization.CreationDate.Value, DateTimeKind.Utc));
+        return new(authorization.CreationDate?.ToDateTimeOffset());
     }
 
     /// <inheritdoc/>
@@ -539,7 +540,7 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
         await Authorizations
             .SelectMany(auth => Tokens.LeftJoin(token => auth.Id!.Equals(token.AuthorizationId)),
                 (auth, token) => new {auth, token})
-            .Where(i => i.auth.CreationDate < threshold.UtcDateTime)
+            .Where(i => i.auth.CreationDate < Instant.FromDateTimeOffset(threshold))
             .Where(i => i.auth.Status != Statuses.Valid ||
                         (i.auth.Type == AuthorizationTypes.AdHoc && i.token.Id == null))
             .Select(i => i.auth)
@@ -576,7 +577,7 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
             throw new ArgumentNullException(nameof(authorization));
         }
 
-        authorization.CreationDate = date?.UtcDateTime;
+        authorization.CreationDate = date == null ? null : Instant.FromDateTimeOffset((DateTimeOffset)date);
 
         return default;
     }

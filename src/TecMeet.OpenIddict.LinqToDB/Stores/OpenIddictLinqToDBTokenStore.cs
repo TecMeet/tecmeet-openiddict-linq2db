@@ -11,6 +11,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using LinqToDB;
 using Microsoft.Extensions.Caching.Memory;
+using NodaTime;
 using TecMeet.OpenIddict.LinqToDB.Models;
 using static OpenIddict.Abstractions.OpenIddictExceptions;
 
@@ -385,7 +386,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
             return new(result: null);
         }
 
-        return new(DateTime.SpecifyKind(token.CreationDate.Value, DateTimeKind.Utc));
+        return new(token.CreationDate?.ToDateTimeUtc());
     }
 
     /// <inheritdoc/>
@@ -401,7 +402,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
             return new(result: null);
         }
 
-        return new(DateTime.SpecifyKind(token.ExpirationDate.Value, DateTimeKind.Utc));
+        return new(token.ExpirationDate?.ToDateTimeUtc());
     }
 
     /// <inheritdoc/>
@@ -474,7 +475,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
             return new(result: null);
         }
 
-        return new(DateTime.SpecifyKind(token.RedemptionDate.Value, DateTimeKind.Utc));
+        return new(token.RedemptionDate?.ToDateTimeUtc());
     }
 
     /// <inheritdoc/>
@@ -588,7 +589,8 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
         // to create a SQL query with an expression calling DateTimeOffset.UtcDateTime.
         // To work around this limitation, the threshold represented as a DateTimeOffset
         // instance is manually converted to a UTC DateTime instance outside the query.
-        var date = threshold.UtcDateTime;
+        // var date = threshold.UtcDateTime;
+        var date = Instant.FromDateTimeOffset(threshold);
 
         await Tokens
             .SelectMany(token => Applications.LeftJoin(app => token.ApplicationId!.Equals(app.Id)),
@@ -598,7 +600,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
             .Where(i => i.token.CreationDate < date)
             .Where(i => (i.token.Status != Statuses.Inactive && i.token.Status != Statuses.Valid) ||
                         (i.auth.Id != null && i.auth.Status != Statuses.Valid) ||
-                        i.token.ExpirationDate < DateTime.UtcNow
+                        i.token.ExpirationDate < SystemClock.Instance.GetCurrentInstant()
             )
             .OrderBy(i => i.token.Id)
             .Take(1_000)
@@ -655,7 +657,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
             throw new ArgumentNullException(nameof(token));
         }
 
-        token.CreationDate = date?.UtcDateTime;
+        token.CreationDate = date == null ? null : Instant.FromDateTimeOffset((DateTimeOffset)date);
 
         return default;
     }
@@ -668,7 +670,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
             throw new ArgumentNullException(nameof(token));
         }
 
-        token.ExpirationDate = date?.UtcDateTime;
+        token.ExpirationDate = date == null ? null : Instant.FromDateTimeOffset((DateTimeOffset)date);
 
         return default;
     }
@@ -733,7 +735,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
             throw new ArgumentNullException(nameof(token));
         }
 
-        token.RedemptionDate = date?.UtcDateTime;
+        token.RedemptionDate = date == null ? null : Instant.FromDateTimeOffset((DateTimeOffset)date);
 
         return default;
     }

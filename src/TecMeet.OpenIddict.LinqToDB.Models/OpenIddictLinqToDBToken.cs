@@ -5,6 +5,7 @@
  */
 
 using System.Diagnostics;
+using NodaTime;
 
 namespace TecMeet.OpenIddict.LinqToDB.Models;
 
@@ -38,12 +39,12 @@ public class OpenIddictLinqToDBToken<TKey>
     /// <summary>
     /// Gets or sets the UTC creation date of the current token.
     /// </summary>
-    public virtual DateTime? CreationDate { get; set; }
+    public virtual Instant? CreationDate { get; set; }
 
     /// <summary>
     /// Gets or sets the UTC expiration date of the current token.
     /// </summary>
-    public virtual DateTime? ExpirationDate { get; set; }
+    public virtual Instant? ExpirationDate { get; set; }
 
     /// <summary>
     /// Gets or sets the unique identifier associated with the current token.
@@ -66,7 +67,7 @@ public class OpenIddictLinqToDBToken<TKey>
     /// <summary>
     /// Gets or sets the UTC redemption date of the current token.
     /// </summary>
-    public virtual DateTime? RedemptionDate { get; set; }
+    public virtual Instant? RedemptionDate { get; set; }
 
     /// <summary>
     /// Gets or sets the reference identifier associated
