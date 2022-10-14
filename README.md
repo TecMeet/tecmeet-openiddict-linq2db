@@ -4,6 +4,13 @@ This library is adapted from the OpenIddict EFCore and MongoDB libraries.
 Thank you to Kévin Chalet for creating OpenIddict and for [encouraging
 me](https://github.com/openiddict/openiddict-core/issues/1503) to create and maintain this library.
 
+## Latest changes
+In version `1.0.0-preview7` the database models have been updated to use NodaTime's
+`Instant` instead of `DateTime`. You will likely need to add the following configuration
+to the LinqToDB mapper: 
+1. In your project, add a package reference to `Npgsql.NodaTime`
+2. Add `NpgsqlConnection.GlobalTypeMapper.UseNodaTime();`
+
 ## How can I use this library?
 
 #### Reference the `TecMeet.OpenIddict.LinqToDB` project
