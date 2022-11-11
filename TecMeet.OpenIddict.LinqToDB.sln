@@ -25,6 +25,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{BC16C1D2-F
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		eng\Versions.props = eng\Versions.props
+		.github\workflows\build.yml = .github\workflows\build.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{C05827C9-BE13-4F20-A53E-12FDEE906555}"
