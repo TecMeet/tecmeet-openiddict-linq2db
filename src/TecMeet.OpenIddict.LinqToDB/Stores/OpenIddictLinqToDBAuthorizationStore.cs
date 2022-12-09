@@ -410,7 +410,7 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
             return builder.ToImmutable();
         });
 
-        return new(properties);
+        return new(properties ?? ImmutableDictionary<string, JsonElement>.Empty);
     }
 
     /// <inheritdoc/>

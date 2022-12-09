@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net6.0;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net6.0;net7.0;netstandard2.0;netstandard2.1</TargetFrameworks>
     <RootNamespace>TecMeet.OpenIddict.LinqToDB</RootNamespace>
   </PropertyGroup>
 
@@ -22,7 +22,7 @@
 
   <ItemGroup>
     <PackageReference Include="linq2db" Version="[4, 5)" />
-    <PackageReference Include="OpenIddict.Core" Version="4.0.0-preview4.22517.68" />
+    <PackageReference Include="OpenIddict.Core" Version="4.0.0-rc1.22607.41" />
   </ItemGroup>
 
 </Project>

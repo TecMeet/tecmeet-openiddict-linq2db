@@ -349,7 +349,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
             return builder.ToImmutable();
         });
 
-        return new(names);
+        return new(names ?? ImmutableDictionary<CultureInfo, string>.Empty);
     }
 
     /// <inheritdoc/>
@@ -477,7 +477,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
             return builder.ToImmutable();
         });
 
-        return new(properties);
+        return new(properties ?? ImmutableDictionary<string, JsonElement>.Empty);
     }
 
     /// <inheritdoc/>

@@ -260,7 +260,7 @@ public class OpenIddictLinqToDBScopeStore<TScope, TKey> : IOpenIddictScopeStore<
             return builder.ToImmutable();
         });
 
-        return new(descriptions);
+        return new(descriptions ?? ImmutableDictionary<CultureInfo, string>.Empty);
     }
 
     /// <inheritdoc/>
@@ -312,7 +312,7 @@ public class OpenIddictLinqToDBScopeStore<TScope, TKey> : IOpenIddictScopeStore<
             return builder.ToImmutable();
         });
 
-        return new(names);
+        return new(names ?? ImmutableDictionary<CultureInfo, string>.Empty);
     }
 
     /// <inheritdoc/>
@@ -369,7 +369,7 @@ public class OpenIddictLinqToDBScopeStore<TScope, TKey> : IOpenIddictScopeStore<
             return builder.ToImmutable();
         });
 
-        return new(properties);
+        return new(properties ?? ImmutableDictionary<string, JsonElement>.Empty);
     }
 
     /// <inheritdoc/>
