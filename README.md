@@ -5,6 +5,11 @@ Thank you to Kévin Chalet for creating OpenIddict and for [encouraging
 me](https://github.com/openiddict/openiddict-core/issues/1503) to create and maintain this library.
 
 ## Latest changes
+
+### 2.0.0-RC1
+- Now using Linq2DB 5.0.0 preview.1 (not backward compatible)
+
+### 1.0.0-preview7
 In version `1.0.0-preview7` the database models have been updated to use NodaTime's
 `Instant` instead of `DateTime`. You will likely need to add the following configuration
 to the LinqToDB mapper: 
