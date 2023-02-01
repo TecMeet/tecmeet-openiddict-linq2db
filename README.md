@@ -6,6 +6,12 @@ me](https://github.com/openiddict/openiddict-core/issues/1503) to create and mai
 
 ## Latest changes
 
+### 2.0.0-RC2
+- Now using only MappingSchema to call UseOpenIddict (see example code below).
+This is a breaking change.
+You should not use RC1, the performance is very bad because the schema
+was updated in every scope and so the LinqToDB queries were not being cached properly.
+
 ### 2.0.0-RC1
 - Now using Linq2DB 5.0.0 preview.1 (not backward compatible)
 
@@ -14,36 +20,43 @@ In version `1.0.0-preview7` the database models have been updated to use NodaTim
 `Instant` instead of `DateTime`. You will likely need to add the following configuration
 to the LinqToDB mapper: 
 1. In your project, add a package reference to `Npgsql.NodaTime`
-2. Add `NpgsqlConnection.GlobalTypeMapper.UseNodaTime();`
+2. Add `NpgsqlConnection.GlobalTypeMapper.UseNodaTime();`. In Linq2DB 5.0.0
+this needs to be the data source builder's `UseNodaTime()` as shown below
 
 ## How can I use this library?
 
 #### Reference the `TecMeet.OpenIddict.LinqToDB` project
 ```xml
-<PackageReference Include="TecMeet.OpenIddict.LinqToDB" Version="1.0.0" />
+<PackageReference Include="TecMeet.OpenIddict.LinqToDB" Version="2.0.0" />
 ```
 
 #### Configure table mappings for LinqToDB:
 ```csharp
-services.AddLinqToDBContext<DbContext>((provider, options) =>
-    {
-        options.UsePostgreSQL(connectionString);
-        options.UseDefaultLogging(provider);
-        
-        // The LinqToDB MappingSchema. Use MappingSchema.Default if you
-        // have not set up your own separate schema.
-        options.UseOpenIddict(MappingSchema.Default);
-        
-        // Or, also set the table names if you want to use something else
-        // than the default.
-        // options.UseOpenIddict(MappingSchema.Default, new OpenIddictLinqToDBNameOptions
-        // {
-        //     ApplicationsTableName = "auth_openiddict_applications",
-        //     AuthorizationsTableName = "auth_openiddict_authorizations",
-        //     ScopesTableName = "auth_openiddict_scopes",
-        //     TokensTableName = "auth_openiddict_tokens"
-        // });
-    });
+var ms = new MappingSchema();
+ms.UseOpenIddict();
+
+// Or, also set the table names if you want to use something else
+// than the default.
+// ms.UseOpenIddict(new OpenIddictLinqToDBNameOptions
+// {
+//     ApplicationsTableName = "auth_openiddict_applications",
+//     AuthorizationsTableName = "auth_openiddict_authorizations",
+//     ScopesTableName = "auth_openiddict_scopes",
+//     TokensTableName = "auth_openiddict_tokens"
+// });
+
+var dsBuilder = new NpgsqlDataSourceBuilder(connectionString);
+dsBuilder.UseNodaTime();
+var ds = dsBuilder.Build();
+
+var dataOptions = new DataOptions()
+    .UseMappingSchema(ms)
+    .UseConnectionFactory(PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95), ds.CreateConnection);
+
+services.AddLinqToDBContext<DbContext>((provider, _) =>
+{
+    dataOptions.UseDefaultLogging(provider);
+});
 ```
 
 #### Configure OpenIddict to use LinqToDB stores:
