@@ -141,11 +141,12 @@ public static class OpenIddictLinqToDBExtensions
 
         var options = dbOptions ?? new OpenIddictLinqToDBNameOptions();
 
-        mappingSchema.GetFluentMappingBuilder()
+        new FluentMappingBuilder(mappingSchema)
             .ConfigureApplicationMapping<TKey, TApplication>(options.ApplicationsTableName)
             .ConfigureAuthorizationMapping<TKey, TAuthorization>(options.AuthorizationsTableName)
             .ConfigureScopeMapping<TKey, TScope>(options.ScopesTableName)
-            .ConfigureTokenMapping<TKey, TToken>(options.TokensTableName);
+            .ConfigureTokenMapping<TKey, TToken>(options.TokensTableName)
+            .Build();
 
         return mappingSchema;
     }
