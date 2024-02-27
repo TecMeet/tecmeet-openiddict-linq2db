@@ -123,7 +123,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
             throw new ArgumentNullException(nameof(application));
         }
 
-        application.Id = (TKey) await Context.InsertWithIdentityAsync(application, token: cancellationToken);
+        application.Id = (TKey)await Context.InsertWithIdentityAsync(application, token: cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -133,7 +133,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
         {
             throw new ArgumentNullException(nameof(application));
         }
-        
+
         if (await Applications.Where(entity =>
                     entity.Id!.Equals(application.Id) &&
                     entity.ConcurrencyToken == application.ConcurrencyToken)
@@ -141,11 +141,11 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
         {
             throw new ConcurrencyException(SR.GetResourceString(SR.ID0247));
         }
-        
+
         // Delete the authorizations associated with the application.
         await Authorizations.Where(auth => auth.ApplicationId != null && auth.ApplicationId.Equals(application.Id))
             .DeleteAsync(cancellationToken);
-        
+
         // Delete the tokens associated with the application.
         await Tokens.Where(token => token.ApplicationId != null && token.ApplicationId.Equals(application.Id))
             .DeleteAsync(cancellationToken);
@@ -197,7 +197,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
             var applications =
                 Applications.Where(app => app.PostLogoutRedirectUris != null &&
                                           app.PostLogoutRedirectUris.Contains(address));
-            
+
             await foreach (var application in applications.AsAsyncEnumerable(cancellationToken))
             {
                 var addresses = await GetPostLogoutRedirectUrisAsync(application, cancellationToken);
@@ -231,7 +231,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
             var applications =
                 Applications.Where(app => app.RedirectUris != null &&
                                           app.RedirectUris.Contains(address));
-            
+
             await foreach (var application in applications.AsAsyncEnumerable(cancellationToken))
             {
                 var addresses = await GetRedirectUrisAsync(application, cancellationToken);
@@ -912,9 +912,9 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
         // Do manual concurrency check before updating entity in db because
         // LinqToDB can not do "where" check when updating entire entity.
         var concurrencyChecked =
-            await Tokens.AnyAsync(i => i.Id!.Equals(application.Id) && i.ConcurrencyToken == application.ConcurrencyToken,
+            await Applications.AnyAsync(i => i.Id!.Equals(application.Id) && i.ConcurrencyToken == application.ConcurrencyToken,
                 token: cancellationToken);
-        
+
         if (!concurrencyChecked)
         {
             throw new ConcurrencyException(SR.GetResourceString(SR.ID0239));
@@ -939,7 +939,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
             return default;
         }
 
-        return (TKey?) TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(identifier);
+        return (TKey?)TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(identifier);
     }
 
     /// <summary>
