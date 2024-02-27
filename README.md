@@ -6,6 +6,12 @@ me](https://github.com/openiddict/openiddict-core/issues/1503) to create and mai
 
 ## Latest changes
 
+### 2.0.1
+- Fix "update application" concurrency bug, PR #2
+
+### 2.0.0 (actually 2.0.412392)
+- Now using Linq2DB 5.0.0 stable
+
 ### 2.0.0-RC2
 - Now using only MappingSchema to call UseOpenIddict (see example code below).
 This is a breaking change.
