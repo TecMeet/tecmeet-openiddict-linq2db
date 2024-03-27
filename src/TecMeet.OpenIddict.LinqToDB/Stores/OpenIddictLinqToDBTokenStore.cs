@@ -120,7 +120,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
             throw new ArgumentNullException(nameof(token));
         }
 
-        token.Id = (TKey) await Context.InsertWithIdentityAsync(token, token: cancellationToken);
+        token.Id = (TKey)await Context.InsertWithIdentityAsync(token, token: cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -130,7 +130,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
         {
             throw new ArgumentNullException(nameof(token));
         }
-        
+
         if (await Tokens.Where(entity =>
                 entity.Id!.Equals(token.Id) &&
                 entity.ConcurrencyToken == token.ConcurrencyToken)
@@ -195,7 +195,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
         async IAsyncEnumerable<TToken> ExecuteAsync()
         {
             await foreach (var token in Tokens
-                               .Where(token => token.ApplicationId!.Equals(appId) && 
+                               .Where(token => token.ApplicationId!.Equals(appId) &&
                                                token.Subject == subject &&
                                                token.Status == status)
                                .AsAsyncEnumerable().WithCancellation(cancellationToken))
@@ -237,7 +237,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
         async IAsyncEnumerable<TToken> ExecuteAsync()
         {
             await foreach (var token in Tokens
-                               .Where(token => token.ApplicationId!.Equals(appId) && 
+                               .Where(token => token.ApplicationId!.Equals(appId) &&
                                                token.Subject == subject &&
                                                token.Status == status &&
                                                token.Type == type)
@@ -583,7 +583,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
     }
 
     /// <inheritdoc/>
-    public virtual async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
+    public virtual async ValueTask<long> PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
     {
         // Note: the Oracle MySQL provider doesn't support DateTimeOffset and is unable
         // to create a SQL query with an expression calling DateTimeOffset.UtcDateTime.
@@ -592,20 +592,35 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
         // var date = threshold.UtcDateTime;
         var date = Instant.FromDateTimeOffset(threshold);
 
-        await Tokens
-            .SelectMany(token => Applications.LeftJoin(app => token.ApplicationId!.Equals(app.Id)),
-                (token, app) => new {token, app})
-            .SelectMany(i => Authorizations.LeftJoin(auth => i.token.AuthorizationId!.Equals(auth.Id)),
-                (i, auth) => new {i.token, i.app, auth})
-            .Where(i => i.token.CreationDate < date)
-            .Where(i => (i.token.Status != Statuses.Inactive && i.token.Status != Statuses.Valid) ||
-                        (i.auth.Id != null && i.auth.Status != Statuses.Valid) ||
-                        i.token.ExpirationDate < SystemClock.Instance.GetCurrentInstant()
-            )
-            .OrderBy(i => i.token.Id)
-            .Take(1_000)
-            .Select(i => i.token)
-            .DeleteAsync(cancellationToken);
+        return await Tokens
+              .SelectMany(token => Applications.LeftJoin(app => token.ApplicationId!.Equals(app.Id)),
+                  (token, app) => new { token, app })
+              .SelectMany(i => Authorizations.LeftJoin(auth => i.token.AuthorizationId!.Equals(auth.Id)),
+                  (i, auth) => new { i.token, i.app, auth })
+              .Where(i => i.token.CreationDate < date)
+              .Where(i => (i.token.Status != Statuses.Inactive && i.token.Status != Statuses.Valid) ||
+                          (i.auth.Id != null && i.auth.Status != Statuses.Valid) ||
+                          i.token.ExpirationDate < SystemClock.Instance.GetCurrentInstant()
+              )
+              .OrderBy(i => i.token.Id)
+              .Take(1_000)
+              .Select(i => i.token)
+              .DeleteAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async ValueTask<long> RevokeByAuthorizationIdAsync(string identifier, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(identifier))
+        {
+            throw new ArgumentException(SR.GetResourceString(SR.ID0195), nameof(identifier));
+        }
+
+        var key = ConvertIdentifierFromString(identifier);
+
+        return await (from token in Tokens
+                      where token.AuthorizationId!.Equals(key)
+                      select token).Set(_ => _.Status, Statuses.Revoked).UpdateAsync(cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -635,7 +650,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
         {
             throw new ArgumentNullException(nameof(token));
         }
-        
+
         if (!string.IsNullOrEmpty(identifier))
         {
             token.AuthorizationId = ConvertIdentifierFromString(identifier);
@@ -805,7 +820,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
         var concurrencyChecked =
             await Tokens.AnyAsync(i => i.Id!.Equals(token.Id) && i.ConcurrencyToken == token.ConcurrencyToken,
                 token: cancellationToken);
-        
+
         if (!concurrencyChecked)
         {
             throw new ConcurrencyException(SR.GetResourceString(SR.ID0247));
@@ -830,7 +845,7 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
             return default;
         }
 
-        return (TKey?) TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(identifier);
+        return (TKey?)TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(identifier);
     }
 
     /// <summary>

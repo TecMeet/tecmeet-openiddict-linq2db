@@ -4,6 +4,9 @@
  * the license and the contributors participating to this project.
  */
 
+using LinqToDB;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Data;
@@ -12,9 +15,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using LinqToDB;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using TecMeet.OpenIddict.LinqToDB.Models;
 using static OpenIddict.Abstractions.OpenIddictExceptions;
 
@@ -177,11 +177,11 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
 
     /// <inheritdoc/>
     public virtual IAsyncEnumerable<TApplication> FindByPostLogoutRedirectUriAsync(
-        string address, CancellationToken cancellationToken)
+        string uri, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(address))
+        if (string.IsNullOrEmpty(uri))
         {
-            throw new ArgumentException(SR.GetResourceString(SR.ID0143), nameof(address));
+            throw new ArgumentException(SR.GetResourceString(SR.ID0143), nameof(uri));
         }
 
         // To optimize the efficiency of the query a bit, only applications whose stringified
@@ -196,12 +196,12 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
         {
             var applications =
                 Applications.Where(app => app.PostLogoutRedirectUris != null &&
-                                          app.PostLogoutRedirectUris.Contains(address));
+                                          app.PostLogoutRedirectUris.Contains(uri));
 
             await foreach (var application in applications.AsAsyncEnumerable(cancellationToken))
             {
                 var addresses = await GetPostLogoutRedirectUrisAsync(application, cancellationToken);
-                if (addresses.Contains(address, StringComparer.Ordinal))
+                if (addresses.Contains(uri, StringComparer.Ordinal))
                 {
                     yield return application;
                 }
@@ -211,11 +211,11 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
 
     /// <inheritdoc/>
     public virtual IAsyncEnumerable<TApplication> FindByRedirectUriAsync(
-        string address, CancellationToken cancellationToken)
+        string uri, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(address))
+        if (string.IsNullOrEmpty(uri))
         {
-            throw new ArgumentException(SR.GetResourceString(SR.ID0143), nameof(address));
+            throw new ArgumentException(SR.GetResourceString(SR.ID0143), nameof(uri));
         }
 
         // To optimize the efficiency of the query a bit, only applications whose stringified
@@ -230,17 +230,28 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
         {
             var applications =
                 Applications.Where(app => app.RedirectUris != null &&
-                                          app.RedirectUris.Contains(address));
+                                          app.RedirectUris.Contains(uri));
 
             await foreach (var application in applications.AsAsyncEnumerable(cancellationToken))
             {
                 var addresses = await GetRedirectUrisAsync(application, cancellationToken);
-                if (addresses.Contains(address, StringComparer.Ordinal))
+                if (addresses.Contains(uri, StringComparer.Ordinal))
                 {
                     yield return application;
                 }
             }
         }
+    }
+
+    /// <inheritdoc/>
+    public ValueTask<string?> GetApplicationTypeAsync(TApplication application, CancellationToken cancellationToken)
+    {
+        if (application is null)
+        {
+            throw new ArgumentNullException(nameof(application));
+        }
+
+        return new(application.ApplicationType);
     }
 
     /// <inheritdoc/>
@@ -286,7 +297,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
             throw new ArgumentNullException(nameof(application));
         }
 
-        return new(application.Type);
+        return new(application.ClientType);
     }
 
     /// <inheritdoc/>
@@ -361,6 +372,33 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
         }
 
         return new(ConvertIdentifierToString(application.Id));
+    }
+
+    /// <inheritdoc/>
+    public ValueTask<JsonWebKeySet?> GetJsonWebKeySetAsync(TApplication application, CancellationToken cancellationToken)
+    {
+        if (application is null)
+        {
+            throw new ArgumentNullException(nameof(application));
+        }
+
+        if (string.IsNullOrEmpty(application.JsonWebKeySet))
+        {
+            return new(result: null);
+        }
+
+        // Note: parsing the stringified JSON Web Key Set is an expensive operation.
+        // To mitigate that, the resulting object is stored in the memory cache.
+        var key = string.Concat("1e0a697d-0623-481a-927a-5e6c31458782", "\x1e", application.JsonWebKeySet);
+        var set = Cache.GetOrCreate(key, entry =>
+        {
+            entry.SetPriority(CacheItemPriority.High)
+                 .SetSlidingExpiration(TimeSpan.FromMinutes(1));
+
+            return JsonWebKeySet.Create(application.JsonWebKeySet);
+        })!;
+
+        return new(set);
     }
 
     /// <inheritdoc/>
@@ -563,6 +601,47 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
     }
 
     /// <inheritdoc/>
+    public ValueTask<ImmutableDictionary<string, string>> GetSettingsAsync(TApplication application, CancellationToken cancellationToken)
+    {
+        if (application is null)
+        {
+             throw new ArgumentNullException(nameof(application));
+        }
+
+        if (string.IsNullOrEmpty(application.Settings))
+        {
+            return new(ImmutableDictionary.Create<string, string>());
+        }
+
+        // Note: parsing the stringified settings is an expensive operation.
+        // To mitigate that, the resulting object is stored in the memory cache.
+        var key = string.Concat("492ea63f-c26f-47ea-bf9b-b0a0c3d02656", "\x1e", application.Settings);
+        var settings = Cache.GetOrCreate(key, entry =>
+        {
+            entry.SetPriority(CacheItemPriority.High)
+                 .SetSlidingExpiration(TimeSpan.FromMinutes(1));
+
+            using var document = JsonDocument.Parse(application.Settings);
+            var builder = ImmutableDictionary.CreateBuilder<string, string>();
+
+            foreach (var property in document.RootElement.EnumerateObject())
+            {
+                var value = property.Value.GetString();
+                if (string.IsNullOrEmpty(value))
+                {
+                    continue;
+                }
+
+                builder[property.Name] = value;
+            }
+
+            return builder.ToImmutable();
+        })!;
+
+        return new(settings);
+    }
+
+    /// <inheritdoc/>
     public virtual ValueTask<TApplication> InstantiateAsync(CancellationToken cancellationToken)
     {
         try
@@ -609,6 +688,19 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
     }
 
     /// <inheritdoc/>
+    public ValueTask SetApplicationTypeAsync(TApplication application, string? type, CancellationToken cancellationToken)
+    {
+        if (application is null)
+        {
+            throw new ArgumentNullException(nameof(application));
+        }
+
+        application.ApplicationType = type;
+
+        return default;
+    }
+
+    /// <inheritdoc/>
     public virtual ValueTask SetClientIdAsync(TApplication application, string? identifier, CancellationToken cancellationToken)
     {
         if (application is null)
@@ -642,7 +734,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
             throw new ArgumentNullException(nameof(application));
         }
 
-        application.Type = type;
+        application.ClientType = type;
 
         return default;
     }
@@ -713,6 +805,19 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
     }
 
     /// <inheritdoc/>
+    public ValueTask SetJsonWebKeySetAsync(TApplication application, JsonWebKeySet? set, CancellationToken cancellationToken)
+    {
+        if (application is null)
+        {
+            throw new ArgumentNullException(nameof(application));
+        }
+
+        application.JsonWebKeySet = set is not null ? JsonSerializer.Serialize(set) : null;
+
+        return default;
+    }
+
+    /// <inheritdoc/>
     public virtual ValueTask SetPermissionsAsync(TApplication application, ImmutableArray<string> permissions, CancellationToken cancellationToken)
     {
         if (application is null)
@@ -751,14 +856,14 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
 
     /// <inheritdoc/>
     public virtual ValueTask SetPostLogoutRedirectUrisAsync(TApplication application,
-        ImmutableArray<string> addresses, CancellationToken cancellationToken)
+        ImmutableArray<string> uris, CancellationToken cancellationToken)
     {
         if (application is null)
         {
             throw new ArgumentNullException(nameof(application));
         }
 
-        if (addresses.IsDefaultOrEmpty)
+        if (uris.IsDefaultOrEmpty)
         {
             application.PostLogoutRedirectUris = null;
 
@@ -774,7 +879,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
 
         writer.WriteStartArray();
 
-        foreach (var address in addresses)
+        foreach (var address in uris)
         {
             writer.WriteStringValue(address);
         }
@@ -828,14 +933,14 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
 
     /// <inheritdoc/>
     public virtual ValueTask SetRedirectUrisAsync(TApplication application,
-        ImmutableArray<string> addresses, CancellationToken cancellationToken)
+        ImmutableArray<string> uris, CancellationToken cancellationToken)
     {
         if (application is null)
         {
             throw new ArgumentNullException(nameof(application));
         }
 
-        if (addresses.IsDefaultOrEmpty)
+        if (uris.IsDefaultOrEmpty)
         {
             application.RedirectUris = null;
 
@@ -851,7 +956,7 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
 
         writer.WriteStartArray();
 
-        foreach (var address in addresses)
+        foreach (var address in uris)
         {
             writer.WriteStringValue(address);
         }
@@ -897,6 +1002,43 @@ public class OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TT
         writer.Flush();
 
         application.Requirements = Encoding.UTF8.GetString(stream.ToArray());
+
+        return default;
+    }
+
+    public ValueTask SetSettingsAsync(TApplication application, ImmutableDictionary<string, string> settings, CancellationToken cancellationToken)
+    {
+        if (application is null)
+        {
+            throw new ArgumentNullException(nameof(application));
+        }
+
+        if (settings is not { Count: > 0 })
+        {
+            application.Settings = null;
+
+            return default;
+        }
+
+        using var stream = new MemoryStream();
+        using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            Indented = false
+        });
+
+        writer.WriteStartObject();
+
+        foreach (var setting in settings)
+        {
+            writer.WritePropertyName(setting.Key);
+            writer.WriteStringValue(setting.Value);
+        }
+
+        writer.WriteEndObject();
+        writer.Flush();
+
+        application.Settings = Encoding.UTF8.GetString(stream.ToArray());
 
         return default;
     }

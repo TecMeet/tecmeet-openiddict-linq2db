@@ -1,11 +1,13 @@
-using System.Collections.Immutable;
-using System.Globalization;
-using System.Text.Json;
 using FluentAssertions;
 using LinqToDB;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Moq;
+using System.Collections.Immutable;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text.Json;
 using TecMeet.OpenIddict.LinqToDB;
 using TecMeet.OpenIddict.LinqToDB.Models;
 using Xunit;
@@ -19,31 +21,31 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var context = Mock.Of<IDataContext>();
-        var cache = (IMemoryCache) null!;
-        
+        var cache = (IMemoryCache)null!;
+
         // Act
         var act = () =>
             new OpenIddictLinqToDBApplicationStore(
                 cache,
                 context);
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("cache");
     }
-    
+
     [Fact]
     public void Constructor_NullContextShouldThrow()
     {
         // Arrange
-        var context = (IDataContext) null!;
+        var context = (IDataContext)null!;
         var cache = Mock.Of<IMemoryCache>();
-        
+
         // Act
         var act = () =>
             new OpenIddictLinqToDBApplicationStore(
                 cache,
                 context);
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("context");
     }
@@ -53,99 +55,128 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = async () =>
             await store.CreateAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public void DeleteAsync_NullApplicationParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = async () =>
             await store.DeleteAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public void FindByClientIdAsync_NullOrEmptyIdentifierParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = async () =>
             await store.FindByClientIdAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().ThrowAsync<ArgumentException>(SR.GetResourceString(SR.ID0195)).WithParameterName("identifier");
     }
-    
+
     [Fact]
     public void FindByIdAsync_NullOrEmptyIdentifierParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = async () =>
             await store.FindByIdAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().ThrowAsync<ArgumentException>(SR.GetResourceString(SR.ID0195)).WithParameterName("identifier");
     }
-    
+
     [Fact]
     public void FindByPostLogoutRedirectUriAsync_NullOrEmptyAddressParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.FindByPostLogoutRedirectUriAsync(null!, new CancellationToken());
-        
+
         // Assert
-        act.Should().Throw<ArgumentException>(SR.GetResourceString(SR.ID0143)).WithParameterName("address");
+        act.Should().Throw<ArgumentException>(SR.GetResourceString(SR.ID0143)).WithParameterName("uri");
     }
-    
+
     [Fact]
     public void FindByRedirectUriAsync_NullOrEmptyAddressParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.FindByRedirectUriAsync(null!, new CancellationToken());
-        
+
         // Assert
-        act.Should().Throw<ArgumentException>(SR.GetResourceString(SR.ID0143)).WithParameterName("address");
+        act.Should().Throw<ArgumentException>(SR.GetResourceString(SR.ID0143)).WithParameterName("uri");
     }
-    
+
+    [Fact]
+    public void GetApplicationTypeAsync_NullApplicationParameterShouldThrow()
+    {
+        // Arrange
+        var store = CreateStore();
+
+        // Act
+        var act = () =>
+            store.GetApplicationTypeAsync(null!, new CancellationToken());
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>().WithParameterName("application");
+    }
+
+    [Fact]
+    public async Task GetApplicationTypeAsync_ApplicationTypeShouldBeReturned()
+    {
+        // Arrange
+        var store = CreateStore();
+        var application = CreateApplication();
+        application.ApplicationType = ApplicationTypes.Web;
+
+        // Act
+        var result = await store.GetApplicationTypeAsync(application, new CancellationToken());
+
+        // Assert
+        result.Should().Be(ApplicationTypes.Web);
+    }
+
     [Fact]
     public void GetClientIdAsync_NullApplicationParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetClientIdAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public async Task GetClientIdAsync_ClientIdShouldBeReturned()
     {
@@ -153,28 +184,28 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.ClientId = "abc123";
-        
+
         // Act
-        var result = await store.GetClientIdAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetClientIdAsync(application, new CancellationToken());
+
         // Assert
         result.Should().Be("abc123");
     }
-    
+
     [Fact]
     public void GetClientSecretAsync_NullApplicationParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetClientSecretAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public async Task GetClientSecretAsync_ClientSecretShouldBeReturned()
     {
@@ -182,10 +213,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.ClientSecret = "secret123";
-        
+
         // Act
-        var result = await store.GetClientSecretAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetClientSecretAsync(application, new CancellationToken());
+
         // Assert
         result.Should().Be("secret123");
     }
@@ -195,26 +226,26 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetClientTypeAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public async Task GetClientTypeAsync_ClientTypeShouldBeReturned()
     {
         // Arrange
         var store = CreateStore();
         var application = CreateApplication();
-        application.Type = "clientType123";
-        
+        application.ClientType = "clientType123";
+
         // Act
-        var result = await store.GetClientTypeAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetClientTypeAsync(application, new CancellationToken());
+
         // Assert
         result.Should().Be("clientType123");
     }
@@ -224,15 +255,15 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetConsentTypeAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public async Task GetConsentTypeAsync_ConsentTypeShouldBeReturned()
     {
@@ -240,10 +271,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.ConsentType = "consentType123";
-        
+
         // Act
-        var result = await store.GetConsentTypeAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetConsentTypeAsync(application, new CancellationToken());
+
         // Assert
         result.Should().Be("consentType123");
     }
@@ -253,15 +284,15 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetDisplayNameAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public async Task GetDisplayNameAsync_DisplayNameShouldBeReturned()
     {
@@ -269,10 +300,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.DisplayName = "display123";
-        
+
         // Act
-        var result = await store.GetDisplayNameAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetDisplayNameAsync(application, new CancellationToken());
+
         // Assert
         result.Should().Be("display123");
     }
@@ -282,15 +313,15 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetDisplayNamesAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public async Task GetDisplayNamesAsync_DisplayNamesShouldBeReturned()
     {
@@ -299,16 +330,16 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.DisplayNames = "{\"af\":\"name1\",\"ar\":\"name2\",\"az\":\"\",\"be\":\"name3\",\"ca\":null}";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetDisplayNamesAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetDisplayNamesAsync(application, new CancellationToken());
+
         // Assert
         result.Should().HaveCount(3);
         result.Should().NotContainValue("");
-        result.Should().ContainValues(new[]{"name1","name2","name3"});
+        result.Should().ContainValues(new[] { "name1", "name2", "name3" });
     }
-    
+
     [Fact]
     public async Task GetDisplayNamesAsync_EmptyDisplayNamesShouldReturnEmptyDictionary()
     {
@@ -317,15 +348,15 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.DisplayNames = "";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetDisplayNamesAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetDisplayNamesAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
-    
+
     [Fact]
     public async Task GetDisplayNamesAsync_NullDisplayNamesShouldReturnEmptyDictionary()
     {
@@ -334,25 +365,25 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.DisplayNames = null;
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetDisplayNamesAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetDisplayNamesAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
-    
+
     [Fact]
     public void GetIdAsync_NullApplicationParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetIdAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
@@ -364,10 +395,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var application = CreateApplication();
         application.Id = "e7fe1a6a-5d2f-4ea9-be72-2c567259c74d";
         var store = CreateStore();
-        
+
         // Act
-        var result = await store.GetIdAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetIdAsync(application, new CancellationToken());
+
         // Assert
         result.Should().Be("e7fe1a6a-5d2f-4ea9-be72-2c567259c74d");
     }
@@ -379,10 +410,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var application = CreateApplication<long>();
         application.Id = 999555;
         var store = CreateStore<long>();
-        
+
         // Act
-        var result = await store.GetIdAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetIdAsync(application, new CancellationToken());
+
         // Assert
         result.Should().Be("999555");
     }
@@ -394,12 +425,57 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var application = CreateApplication<Guid>();
         application.Id = Guid.Parse("58152781-fc2d-4923-9665-d4eb1d27f28c");
         var store = CreateStore<Guid>();
-        
+
         // Act
-        var result = await store.GetIdAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetIdAsync(application, new CancellationToken());
+
         // Assert
         result.Should().Be("58152781-fc2d-4923-9665-d4eb1d27f28c");
+    }
+
+    [Fact]
+    public void GetJsonWebKeySetAsync_NullApplicationParameterShouldThrow()
+    {
+        // Arrange
+        var store = CreateStore();
+
+        // Act
+        var act = () =>
+            store.GetJsonWebKeySetAsync(null!, new CancellationToken());
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>().WithParameterName("application");
+    }
+
+    [Fact]
+    public async void GetJsonWebKeySetAsync_NullJsonWebKeySetParameterShouldThrow()
+    {
+        // Arrange
+        var store = CreateStore();
+        var application = CreateApplication();
+
+        // Act
+        var result = await store.GetJsonWebKeySetAsync(application, new CancellationToken());
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetJsonWebKeySetAsync_JsonWebKeySetShouldBeReturned()
+    {
+        // Arrange
+        var memoryCache = CreateMemoryCache();
+        var store = CreateStore(memoryCache);
+        var application = CreateApplication();
+        application.JsonWebKeySet = "{\"keys\":[{\"crv\":\"P-256\",\"key_ops\":[],\"kty\":\"EC\",\"oth\":[],\"x\":\"I23kaVsRRAWIez_pqEZOByJFmlXda6iSQ4QqcH23Ir8\",\"x5c\":[],\"y\":\"GmDz1-ZbFZwbBMTbJe0jmDoiIYE2l-vj00u8sU55r0s\"}]}";
+
+        // Act
+        var result = await store.GetJsonWebKeySetAsync(application, new CancellationToken());
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Keys.Should().HaveCount(1);
     }
 
     [Fact]
@@ -407,15 +483,15 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetPermissionsAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public async Task GetPermissionsAsync_PermissionsShouldBeReturned()
     {
@@ -424,16 +500,16 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.Permissions = "[\"\",null,\"DoThis\",null,\"DoThat\"]";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetPermissionsAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetPermissionsAsync(application, new CancellationToken());
+
         // Assert
         result.Should().HaveCount(2);
         result.Should().NotContain("");
-        result.Should().Contain(new[]{"DoThis","DoThat"});
+        result.Should().Contain(new[] { "DoThis", "DoThat" });
     }
-    
+
     [Fact]
     public async Task GetPermissionsAsync_EmptyPermissionsShouldReturnEmptyDictionary()
     {
@@ -442,15 +518,15 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.Permissions = "";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetPermissionsAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetPermissionsAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
-    
+
     [Fact]
     public async Task GetPermissionsAsync_NullPermissionsShouldReturnEmptyDictionary()
     {
@@ -459,29 +535,29 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.Permissions = null;
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetPermissionsAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetPermissionsAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
-    
+
     [Fact]
     public void GetPostLogoutRedirectUrisAsync_NullApplicationParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetPostLogoutRedirectUrisAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public async Task GetPostLogoutRedirectUrisAsync_ValuesShouldBeReturned()
     {
@@ -490,16 +566,16 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.PostLogoutRedirectUris = "[\"\",null,\"Redirect1\",null,\"Redirect2\"]";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetPostLogoutRedirectUrisAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetPostLogoutRedirectUrisAsync(application, new CancellationToken());
+
         // Assert
         result.Should().HaveCount(2);
         result.Should().NotContain("");
-        result.Should().Contain(new[]{"Redirect1","Redirect2"});
+        result.Should().Contain(new[] { "Redirect1", "Redirect2" });
     }
-    
+
     [Fact]
     public async Task GetPostLogoutRedirectUrisAsync_EmptyValuesShouldReturnEmptyDictionary()
     {
@@ -508,15 +584,15 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.PostLogoutRedirectUris = "";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetPostLogoutRedirectUrisAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetPostLogoutRedirectUrisAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
-    
+
     [Fact]
     public async Task GetPostLogoutRedirectUrisAsync_NullValuesShouldReturnEmptyDictionary()
     {
@@ -525,29 +601,29 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.PostLogoutRedirectUris = null;
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetPostLogoutRedirectUrisAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetPostLogoutRedirectUrisAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
-    
+
     [Fact]
     public void GetPropertiesAsync_NullApplicationParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetPropertiesAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public async Task GetPropertiesAsync_ValuesShouldBeReturned()
     {
@@ -556,10 +632,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.Properties = "{\"a\":\"prop1\",\"c\":\"\",\"e\":null}";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetPropertiesAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetPropertiesAsync(application, new CancellationToken());
+
         // Assert
         result.Should().HaveCount(3);
         result.Should().Contain(i => i.Value.GetString() == "prop1");
@@ -567,7 +643,7 @@ public class OpenIddictLinqToDBApplicationStoreTests
         result.Should().Contain(i => i.Value.GetString() == "");
         result.Should().Contain(i => i.Value.GetString() == null);
     }
-    
+
     [Fact]
     public async Task GetPropertiesAsync_EmptyDisplayNamesShouldReturnEmptyDictionary()
     {
@@ -576,15 +652,15 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.Properties = "";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetPropertiesAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetPropertiesAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
-    
+
     [Fact]
     public async Task GetPropertiesAsync_NullDisplayNamesShouldReturnEmptyDictionary()
     {
@@ -593,29 +669,29 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.Properties = null;
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetPropertiesAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetPropertiesAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
-    
+
     [Fact]
     public void GetRedirectUrisAsync_NullApplicationParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetRedirectUrisAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public async Task GetRedirectUrisAsync_ValuesShouldBeReturned()
     {
@@ -624,16 +700,16 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.RedirectUris = "[\"\",null,\"RedirectUri1\",null,\"RedirectUri2\"]";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetRedirectUrisAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetRedirectUrisAsync(application, new CancellationToken());
+
         // Assert
         result.Should().HaveCount(2);
         result.Should().NotContain("");
-        result.Should().Contain(new[]{"RedirectUri1","RedirectUri2"});
+        result.Should().Contain(new[] { "RedirectUri1", "RedirectUri2" });
     }
-    
+
     [Fact]
     public async Task GetRedirectUrisAsync_EmptyValuesShouldReturnEmptyDictionary()
     {
@@ -642,15 +718,15 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.RedirectUris = "";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetRedirectUrisAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetRedirectUrisAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
-    
+
     [Fact]
     public async Task GetRedirectUrisAsync_NullValuesShouldReturnEmptyDictionary()
     {
@@ -659,29 +735,29 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.RedirectUris = null;
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetRedirectUrisAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetRedirectUrisAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
-    
+
     [Fact]
     public void GetRequirementsAsync_NullApplicationParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.GetRequirementsAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
-    
+
     [Fact]
     public async Task GetRequirementsAsync_ValuesShouldBeReturned()
     {
@@ -690,16 +766,16 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.Requirements = "[\"\",null,\"RedirectUri1\",null,\"RedirectUri2\"]";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetRequirementsAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetRequirementsAsync(application, new CancellationToken());
+
         // Assert
         result.Should().HaveCount(2);
         result.Should().NotContain("");
-        result.Should().Contain(new[]{"RedirectUri1","RedirectUri2"});
+        result.Should().Contain(new[] { "RedirectUri1", "RedirectUri2" });
     }
-    
+
     [Fact]
     public async Task GetRequirementsAsync_EmptyValuesShouldReturnEmptyDictionary()
     {
@@ -708,15 +784,15 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.Requirements = "";
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetRequirementsAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetRequirementsAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
-    
+
     [Fact]
     public async Task GetRequirementsAsync_NullValuesShouldReturnEmptyDictionary()
     {
@@ -725,38 +801,130 @@ public class OpenIddictLinqToDBApplicationStoreTests
         application.Requirements = null;
         var memoryCache = CreateMemoryCache();
         var store = CreateStore(memoryCache);
-        
+
         // Act
-        var result = await store.GetRequirementsAsync(application, new CancellationToken()); 
-        
+        var result = await store.GetRequirementsAsync(application, new CancellationToken());
+
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(0);
     }
 
     [Fact]
+    public void GetSettingsAsync_NullApplicationParameterShouldThrow()
+    {
+        // Arrange
+        var store = CreateStore();
+
+        // Act
+        var act = () =>
+            store.GetSettingsAsync(null!, new CancellationToken());
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>().WithParameterName("application");
+    }
+
+    [Fact]
+    public async void GetSettingsAsync_NullValuesShouldReturnEmptyDictionary()
+    {
+        // Arrange
+        var store = CreateStore();
+        var application = CreateApplication();
+        application.Settings = null;
+
+        // Act
+        var result = await store.GetSettingsAsync(application, new CancellationToken());
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().HaveCount(0);
+    }
+
+    [Fact]
+    public async void GetSettingsAsync_ValuesShouldReturn()
+    {
+        // Arrange
+        var memoryCache = CreateMemoryCache();
+        var store = CreateStore(memoryCache);
+        var application = CreateApplication();
+        application.Settings = "{\"tkn_lft:act\":\"00:10:00\"}";
+
+        // Act
+        var result = await store.GetSettingsAsync(application, new CancellationToken());
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().HaveCount(1);
+        result.Should().ContainKey(Settings.TokenLifetimes.AccessToken);
+    }
+
+    [Fact]
     public async Task InstantiateAsync_CreatedTypeIsCorrect()
     {
         // Arrange
-        var store = CreateStore<CustomApplication,CustomAuthorization,CustomToken,long>();
-        
+        var store = CreateStore<CustomApplication, CustomAuthorization, CustomToken, long>();
+
         // Act
-        var result = await store.InstantiateAsync(new CancellationToken()); 
-        
+        var result = await store.InstantiateAsync(new CancellationToken());
+
         // Assert
         result.Should().BeOfType<CustomApplication>();
     }
-    
+
+    [Fact]
+    public void SetApplicationTypeAsync_NullApplicationParameterShouldThrow()
+    {
+        // Arrange
+        var store = CreateStore();
+
+        // Act
+        var act = () =>
+            store.SetApplicationTypeAsync(null!, null, new CancellationToken());
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>().WithParameterName("application");
+    }
+
+    [Fact]
+    public async void SetApplicationTypeAsync_ApplicationTypeToNullShouldWork()
+    {
+        // Arrange
+        var store = CreateStore();
+        var application = CreateApplication();
+        application.ApplicationType = ApplicationTypes.Web;
+
+        // Act
+        await store.SetApplicationTypeAsync(application, null, new CancellationToken());
+
+        // Assert
+        application.ApplicationType.Should().BeNull();
+    }
+
+    [Fact]
+    public async void SetApplicationTypeAsync_ApplicationTypeToOtherValueShouldWork()
+    {
+        // Arrange
+        var store = CreateStore();
+        var application = CreateApplication();
+        application.ApplicationType = ApplicationTypes.Web;
+
+        // Act
+        await store.SetClientIdAsync(application, ApplicationTypes.Native, new CancellationToken());
+
+        // Assert
+        application.ClientId.Should().Be(ApplicationTypes.Native);
+    }
+
     [Fact]
     public void SetClientIdAsync_NullApplicationParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.SetClientIdAsync(null!, null, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
@@ -769,10 +937,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.ClientId = "123";
-        
+
         // Act
         await store.SetClientIdAsync(application, null, new CancellationToken());
-        
+
         // Assert
         application.ClientId.Should().BeNull();
     }
@@ -784,10 +952,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.ClientId = "123";
-        
+
         // Act
         await store.SetClientIdAsync(application, "456", new CancellationToken());
-        
+
         // Assert
         application.ClientId.Should().Be("456");
     }
@@ -797,11 +965,11 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.SetClientSecretAsync(null!, null, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
@@ -814,10 +982,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.ClientSecret = "123";
-        
+
         // Act
         await store.SetClientSecretAsync(application, null, new CancellationToken());
-        
+
         // Assert
         application.ClientSecret.Should().BeNull();
     }
@@ -829,10 +997,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.ClientSecret = "123";
-        
+
         // Act
         await store.SetClientSecretAsync(application, "456", new CancellationToken());
-        
+
         // Assert
         application.ClientSecret.Should().Be("456");
     }
@@ -842,11 +1010,11 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.SetClientTypeAsync(null!, null, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
@@ -858,13 +1026,13 @@ public class OpenIddictLinqToDBApplicationStoreTests
         // Arrange
         var store = CreateStore();
         var application = CreateApplication();
-        application.Type = "123";
-        
+        application.ClientType = "123";
+
         // Act
         await store.SetClientTypeAsync(application, null, new CancellationToken());
-        
+
         // Assert
-        application.Type.Should().BeNull();
+        application.ClientType.Should().BeNull();
     }
 
     [Fact]
@@ -873,13 +1041,13 @@ public class OpenIddictLinqToDBApplicationStoreTests
         // Arrange
         var store = CreateStore();
         var application = CreateApplication();
-        application.Type = "123";
-        
+        application.ClientType = "123";
+
         // Act
         await store.SetClientTypeAsync(application, "456", new CancellationToken());
-        
+
         // Assert
-        application.Type.Should().Be("456");
+        application.ClientType.Should().Be("456");
     }
 
     [Fact]
@@ -887,11 +1055,11 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.SetConsentTypeAsync(null!, null, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
@@ -904,10 +1072,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.ConsentType = "123";
-        
+
         // Act
         await store.SetConsentTypeAsync(application, null, new CancellationToken());
-        
+
         // Assert
         application.ConsentType.Should().BeNull();
     }
@@ -919,10 +1087,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.ConsentType = "123";
-        
+
         // Act
         await store.SetConsentTypeAsync(application, "456", new CancellationToken());
-        
+
         // Assert
         application.ConsentType.Should().Be("456");
     }
@@ -932,11 +1100,11 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.SetDisplayNameAsync(null!, null, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
@@ -949,10 +1117,10 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.DisplayName = "123";
-        
+
         // Act
         await store.SetDisplayNameAsync(application, null, new CancellationToken());
-        
+
         // Assert
         application.DisplayName.Should().BeNull();
     }
@@ -964,12 +1132,71 @@ public class OpenIddictLinqToDBApplicationStoreTests
         var store = CreateStore();
         var application = CreateApplication();
         application.DisplayName = "123";
-        
+
         // Act
         await store.SetDisplayNameAsync(application, "456", new CancellationToken());
-        
+
         // Assert
         application.DisplayName.Should().Be("456");
+    }
+
+    [Fact]
+    public void SetJsonWebKeySetAsync_NullApplicationParameterShouldThrow()
+    {
+        // Arrange
+        var store = CreateStore();
+
+        // Act
+        var act = () =>
+            store.SetJsonWebKeySetAsync(null!, null, new CancellationToken());
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>().WithParameterName("application");
+    }
+
+    [Fact]
+    public async Task SetJsonWebKeySetAsync_SettingIdToNullShouldWork()
+    {
+        // Arrange
+        var store = CreateStore();
+        var application = CreateApplication();
+        application.JsonWebKeySet = "123";
+
+        // Act
+        await store.SetJsonWebKeySetAsync(application, null, new CancellationToken());
+
+        // Assert
+        application.DisplayName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SetJsonWebKeySetAsync_SettingToOtherValueShouldWork()
+    {
+        // Arrange
+        var store = CreateStore();
+        var application = CreateApplication();
+        var set = new JsonWebKeySet
+        {
+            Keys = {
+                       // On supported platforms, this application authenticates by generating JWT client
+                       // assertions that are signed using a signing key instead of using a client secret.
+                       //
+                       // Note: while the client needs access to the private key, the server only needs
+                       // to know the public key to be able to validate the client assertions it receives.
+                       JsonWebKeyConverter.ConvertFromECDsaSecurityKey(GetECDsaSigningKey($"""
+                           -----BEGIN PUBLIC KEY-----
+                           MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEI23kaVsRRAWIez/pqEZOByJFmlXd
+                           a6iSQ4QqcH23Ir8aYPPX5lsVnBsExNsl7SOYOiIhgTaX6+PTS7yxTnmvSw==
+                           -----END PUBLIC KEY-----
+                           """))
+                   }
+        };
+
+        // Act
+        await store.SetJsonWebKeySetAsync(application, set, new CancellationToken());
+
+        // Assert
+        application.JsonWebKeySet.Should().Be("{\"keys\":[{\"crv\":\"P-256\",\"key_ops\":[],\"kty\":\"EC\",\"oth\":[],\"x\":\"I23kaVsRRAWIez_pqEZOByJFmlXda6iSQ4QqcH23Ir8\",\"x5c\":[],\"y\":\"GmDz1-ZbFZwbBMTbJe0jmDoiIYE2l-vj00u8sU55r0s\"}]}");
     }
 
     [Fact]
@@ -977,11 +1204,11 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.SetDisplayNamesAsync(null!, ImmutableDictionary<CultureInfo, string>.Empty, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
@@ -991,11 +1218,11 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.SetPermissionsAsync(null!, ImmutableArray<string>.Empty, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
@@ -1005,11 +1232,11 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.SetPostLogoutRedirectUrisAsync(null!, ImmutableArray<string>.Empty, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
@@ -1019,11 +1246,11 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.SetPropertiesAsync(null!, ImmutableDictionary<string, JsonElement>.Empty, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
@@ -1033,11 +1260,11 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.SetRedirectUrisAsync(null!, ImmutableArray<string>.Empty, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
     }
@@ -1047,13 +1274,47 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = () =>
             store.SetRequirementsAsync(null!, ImmutableArray<string>.Empty, new CancellationToken());
-        
+
         // Assert
         act.Should().Throw<ArgumentNullException>().WithParameterName("application");
+    }
+
+    [Fact]
+    public void SetSettingsAsync_NullApplicationParameterShouldThrow()
+    {
+        // Arrange
+        var store = CreateStore();
+
+        // Act
+        var act = () =>
+            store.SetSettingsAsync(null!, ImmutableDictionary<string, string>.Empty, new CancellationToken());
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>().WithParameterName("application");
+    }
+
+    [Fact]
+    public async void SetSettingsAsync_SettingsToOtherValueShouldWork()
+    {
+        // Arrange
+        var store = CreateStore();
+        var application = CreateApplication();
+        application.Settings = "{\"tkn_lft:act\":\"00:15:00\"}";
+
+        var settings = new Dictionary<string, string>
+        {
+            [Settings.TokenLifetimes.AccessToken] = TimeSpan.FromMinutes(10).ToString("c", CultureInfo.InvariantCulture)
+        };
+
+        // Act
+        await store.SetSettingsAsync(application, settings.ToImmutableDictionary(), new CancellationToken());
+
+        // Assert
+        application.Settings.Should().Be("{\"tkn_lft:act\":\"00:10:00\"}");
     }
 
     [Fact]
@@ -1061,37 +1322,45 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var store = CreateStore();
-        
+
         // Act
         var act = async () =>
             await store.UpdateAsync(null!, new CancellationToken());
-        
+
         // Assert
         act.Should().ThrowAsync<ArgumentNullException>().WithParameterName("application");
     }
 
-    private static IOpenIddictApplicationStore<OpenIddictLinqToDBApplication> CreateStore(IMemoryCache? memoryCache = null) 
+    private static IOpenIddictApplicationStore<OpenIddictLinqToDBApplication> CreateStore(IMemoryCache? memoryCache = null)
         => new OpenIddictLinqToDBApplicationStore(memoryCache ?? Mock.Of<IMemoryCache>(), Mock.Of<IDataContext>());
 
     private static IOpenIddictApplicationStore<OpenIddictLinqToDBApplication<T>> CreateStore<T>(IMemoryCache? memoryCache = null) where T : IEquatable<T>
         => new OpenIddictLinqToDBApplicationStore<T>(memoryCache ?? Mock.Of<IMemoryCache>(), Mock.Of<IDataContext>());
 
-    private static IOpenIddictApplicationStore<TApplication> CreateStore<TApplication,TAuthorization,TToken,TKey>(IMemoryCache? memoryCache = null) 
+    private static IOpenIddictApplicationStore<TApplication> CreateStore<TApplication, TAuthorization, TToken, TKey>(IMemoryCache? memoryCache = null)
         where TKey : IEquatable<TKey>
         where TApplication : OpenIddictLinqToDBApplication<TKey>
         where TAuthorization : OpenIddictLinqToDBAuthorization<TKey>
         where TToken : OpenIddictLinqToDBToken<TKey>
-        => new OpenIddictLinqToDBApplicationStore<TApplication,TAuthorization,TToken,TKey>(memoryCache ?? Mock.Of<IMemoryCache>(), Mock.Of<IDataContext>());
+        => new OpenIddictLinqToDBApplicationStore<TApplication, TAuthorization, TToken, TKey>(memoryCache ?? Mock.Of<IMemoryCache>(), Mock.Of<IDataContext>());
 
     private static OpenIddictLinqToDBApplication CreateApplication() => new();
-    private static OpenIddictLinqToDBApplication<T> CreateApplication<T>() where T : IEquatable<T> 
+    private static OpenIddictLinqToDBApplication<T> CreateApplication<T>() where T : IEquatable<T>
         => new();
 
     private static IMemoryCache? CreateMemoryCache() =>
         new ServiceCollection().AddMemoryCache()
             .BuildServiceProvider().GetService<IMemoryCache>();
-    
-    private class CustomApplication : OpenIddictLinqToDBApplication<long> {}
-    private class CustomAuthorization : OpenIddictLinqToDBAuthorization<long> {}
-    private class CustomToken : OpenIddictLinqToDBToken<long> {}
+
+    static ECDsaSecurityKey GetECDsaSigningKey(ReadOnlySpan<char> key)
+    {
+        var algorithm = ECDsa.Create();
+        algorithm.ImportFromPem(key);
+
+        return new ECDsaSecurityKey(algorithm);
+    }
+
+    private class CustomApplication : OpenIddictLinqToDBApplication<long> { }
+    private class CustomAuthorization : OpenIddictLinqToDBAuthorization<long> { }
+    private class CustomToken : OpenIddictLinqToDBToken<long> { }
 }
