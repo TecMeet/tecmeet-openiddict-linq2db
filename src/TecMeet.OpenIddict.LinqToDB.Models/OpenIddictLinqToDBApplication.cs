@@ -21,6 +21,11 @@ public class OpenIddictLinqToDBApplication<TKey>
     where TKey : notnull, IEquatable<TKey>
 {
     /// <summary>
+    /// Gets or sets the application type associated with the current application.
+    /// </summary>
+    public virtual string? ApplicationType { get; set; }
+
+    /// <summary>
     /// Gets or sets the client identifier associated with the current application.
     /// </summary>
     public virtual string? ClientId { get; set; }
@@ -60,6 +65,12 @@ public class OpenIddictLinqToDBApplication<TKey>
     public virtual TKey? Id { get; set; }
 
     /// <summary>
+    /// Gets or sets the JSON Web Key Set associated with
+    /// the application, serialized as a JSON object.
+    /// </summary>
+    public virtual string? JsonWebKeySet { get; set; }
+
+    /// <summary>
     /// Gets or sets the permissions associated with the
     /// current application, serialized as a JSON array.
     /// </summary>
@@ -92,5 +103,10 @@ public class OpenIddictLinqToDBApplication<TKey>
     /// <summary>
     /// Gets or sets the application type associated with the current application.
     /// </summary>
-    public virtual string? Type { get; set; }
+    public virtual string? ClientType { get; set; }
+
+    /// <summary>
+    /// Gets or sets the settings serialized as a JSON object.
+    /// </summary>
+    public virtual string? Settings { get; set; }
 }
