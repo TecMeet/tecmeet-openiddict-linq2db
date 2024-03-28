@@ -712,7 +712,7 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
         // Do manual concurrency check before updating entity in db because
         // LinqToDB can not do "where" check when updating entire entity.
         var concurrencyChecked =
-            await Tokens.AnyAsync(i => i.Id!.Equals(authorization.Id) && i.ConcurrencyToken == authorization.ConcurrencyToken,
+            await Authorizations.AnyAsync(i => i.Id!.Equals(authorization.Id) && i.ConcurrencyToken == authorization.ConcurrencyToken,
                 token: cancellationToken);
         
         if (!concurrencyChecked)
