@@ -123,7 +123,7 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
             throw new ArgumentNullException(nameof(authorization));
         }
 
-        authorization.Id = (TKey) await Context.InsertWithIdentityAsync(authorization, token: cancellationToken);
+        authorization.Id = (TKey)await Context.InsertWithIdentityAsync(authorization, token: cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -141,7 +141,7 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
         {
             throw new ConcurrencyException(SR.GetResourceString(SR.ID0241));
         }
-        
+
         // Delete the tokens associated with the authorization.
         await Tokens.Where(token => token.AuthorizationId != null && token.AuthorizationId.Equals(authorization.Id))
             .DeleteAsync(cancellationToken);
@@ -191,12 +191,12 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
         }
 
         var key = ConvertIdentifierFromString(client);
-        
+
         var query = Authorizations.Where(auth =>
             auth.Subject == subject &&
             auth.Status == status &&
             auth.ApplicationId != null && auth.ApplicationId.Equals(key));
-        
+
         return query.AsAsyncEnumerable(cancellationToken);
     }
 
@@ -226,13 +226,13 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
         }
 
         var key = ConvertIdentifierFromString(client);
-        
+
         var query = Authorizations.Where(auth =>
             auth.Subject == subject &&
             auth.Status == status &&
             auth.Type == type &&
             auth.ApplicationId != null && auth.ApplicationId.Equals(key));
-        
+
         return query.AsAsyncEnumerable(cancellationToken);
     }
 
@@ -261,9 +261,9 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
         {
             throw new ArgumentException(SR.GetResourceString(SR.ID0200), nameof(type));
         }
-        
+
         var key = ConvertIdentifierFromString(client);
-            
+
         var authorizations = Authorizations.Where(auth =>
                 auth.Subject == subject &&
                 auth.Status == status &&
@@ -534,17 +534,17 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
     }
 
     /// <inheritdoc/>
-    public virtual async ValueTask PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
+    public virtual async ValueTask<long> PruneAsync(DateTimeOffset threshold, CancellationToken cancellationToken)
     {
         // TODO test for multiple tokens per authorization. If that is possible
-        await Authorizations
-            .SelectMany(auth => Tokens.LeftJoin(token => auth.Id!.Equals(token.AuthorizationId)),
-                (auth, token) => new {auth, token})
-            .Where(i => i.auth.CreationDate < Instant.FromDateTimeOffset(threshold))
-            .Where(i => i.auth.Status != Statuses.Valid ||
-                        (i.auth.Type == AuthorizationTypes.AdHoc && i.token.Id == null))
-            .Select(i => i.auth)
-            .DeleteAsync(token: cancellationToken);
+        return await Authorizations
+              .SelectMany(auth => Tokens.LeftJoin(token => auth.Id!.Equals(token.AuthorizationId)),
+                  (auth, token) => new { auth, token })
+              .Where(i => i.auth.CreationDate < Instant.FromDateTimeOffset(threshold))
+              .Where(i => i.auth.Status != Statuses.Valid ||
+                          (i.auth.Type == AuthorizationTypes.AdHoc && i.token.Id == null))
+              .Select(i => i.auth)
+              .DeleteAsync(token: cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -714,7 +714,7 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
         var concurrencyChecked =
             await Authorizations.AnyAsync(i => i.Id!.Equals(authorization.Id) && i.ConcurrencyToken == authorization.ConcurrencyToken,
                 token: cancellationToken);
-        
+
         if (!concurrencyChecked)
         {
             throw new ConcurrencyException(SR.GetResourceString(SR.ID0241));
@@ -739,7 +739,7 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
             return default;
         }
 
-        return (TKey?) TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(identifier);
+        return (TKey?)TypeDescriptor.GetConverter(typeof(TKey)).ConvertFromInvariantString(identifier);
     }
 
     /// <summary>

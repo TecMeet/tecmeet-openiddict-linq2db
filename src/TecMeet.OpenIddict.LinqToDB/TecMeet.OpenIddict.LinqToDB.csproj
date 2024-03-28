@@ -23,7 +23,7 @@
   <ItemGroup>
   <!-- TODO Change back to inclusive versioning [5, 6) once linq2db is not in preview anymore -->
     <PackageReference Include="linq2db" Version="[5, 6)" />
-    <PackageReference Include="OpenIddict.Core" Version="[4, 5)" />
+    <PackageReference Include="OpenIddict.Core" Version="[5, 6)" />
   </ItemGroup>
 
 </Project>
