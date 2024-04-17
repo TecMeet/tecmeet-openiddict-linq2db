@@ -6,6 +6,20 @@ me](https://github.com/openiddict/openiddict-core/issues/1503) to create and mai
 
 ## Latest changes
 
+### 3.0.0
+- Upgraded OpenIddict from 4.x to 5.x
+- Requires migrating database with something like:
+ <details>
+<summary>Migrate OpenIddict from 4.x to 5.x (PostgreSQL)</summary>
+
+```sql
+ALTER TABLE auth_openiddict_applications RENAME COLUMN type TO client_type;
+ALTER TABLE auth_openiddict_applications ADD COLUMN application_type text;
+ALTER TABLE auth_openiddict_applications ADD COLUMN settings text;
+ALTER TABLE auth_openiddict_applications ADD COLUMN json_web_key_set text;
+```
+</details>
+
 ### 2.0.1
 - Fix "update application" concurrency bug, PR #2
 
