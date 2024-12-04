@@ -448,7 +448,7 @@ public class OpenIddictLinqToDBApplicationStoreTests
     }
 
     [Fact]
-    public async void GetJsonWebKeySetAsync_NullJsonWebKeySetParameterShouldThrow()
+    public async Task GetJsonWebKeySetAsync_NullJsonWebKeySetParameterShouldThrow()
     {
         // Arrange
         var store = CreateStore();
@@ -825,7 +825,7 @@ public class OpenIddictLinqToDBApplicationStoreTests
     }
 
     [Fact]
-    public async void GetSettingsAsync_NullValuesShouldReturnEmptyDictionary()
+    public async Task GetSettingsAsync_NullValuesShouldReturnEmptyDictionary()
     {
         // Arrange
         var store = CreateStore();
@@ -841,7 +841,7 @@ public class OpenIddictLinqToDBApplicationStoreTests
     }
 
     [Fact]
-    public async void GetSettingsAsync_ValuesShouldReturn()
+    public async Task GetSettingsAsync_ValuesShouldReturn()
     {
         // Arrange
         var memoryCache = CreateMemoryCache();
@@ -886,7 +886,7 @@ public class OpenIddictLinqToDBApplicationStoreTests
     }
 
     [Fact]
-    public async void SetApplicationTypeAsync_ApplicationTypeToNullShouldWork()
+    public async Task SetApplicationTypeAsync_ApplicationTypeToNullShouldWork()
     {
         // Arrange
         var store = CreateStore();
@@ -901,7 +901,7 @@ public class OpenIddictLinqToDBApplicationStoreTests
     }
 
     [Fact]
-    public async void SetApplicationTypeAsync_ApplicationTypeToOtherValueShouldWork()
+    public async Task SetApplicationTypeAsync_ApplicationTypeToOtherValueShouldWork()
     {
         // Arrange
         var store = CreateStore();
@@ -1298,7 +1298,7 @@ public class OpenIddictLinqToDBApplicationStoreTests
     }
 
     [Fact]
-    public async void SetSettingsAsync_SettingsToOtherValueShouldWork()
+    public async Task SetSettingsAsync_SettingsToOtherValueShouldWork()
     {
         // Arrange
         var store = CreateStore();

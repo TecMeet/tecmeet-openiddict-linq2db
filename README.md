@@ -6,6 +6,10 @@ me](https://github.com/openiddict/openiddict-core/issues/1503) to create and mai
 
 ## Latest changes
 
+### 3.1.0
+- Upgrade packages
+- Remove .NET 6 and 7 targets
+
 ### 3.0.0
 - Upgraded OpenIddict from 4.x to 5.x
 - Requires migrating database with something like:
