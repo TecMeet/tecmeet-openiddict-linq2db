@@ -141,111 +141,34 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
     }
 
     /// <inheritdoc/>
-    public virtual IAsyncEnumerable<TToken> FindAsync(string subject, string client, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrEmpty(subject))
-        {
-            throw new ArgumentException(SR.GetResourceString(SR.ID0198), nameof(subject));
-        }
-
-        if (string.IsNullOrEmpty(client))
-        {
-            throw new ArgumentException(SR.GetResourceString(SR.ID0124), nameof(client));
-        }
-
-        var appId = ConvertIdentifierFromString(client);
-
-        return ExecuteAsync();
-        // need inline method so that cancellationToken can be used
-        async IAsyncEnumerable<TToken> ExecuteAsync()
-        {
-            await foreach (var token in Tokens
-                               .Where(token => token.ApplicationId!.Equals(appId) && token.Subject == subject)
-                               .AsAsyncEnumerable().WithCancellation(cancellationToken))
-            {
-                yield return token;
-            }
-        }
-    }
-
-    /// <inheritdoc/>
     public virtual IAsyncEnumerable<TToken> FindAsync(
-        string subject, string client,
-        string status, CancellationToken cancellationToken)
+        string? subject, string? client,
+        string? status, string? type, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(subject))
+        var query = Tokens.AsQueryable();
+
+        if (!string.IsNullOrEmpty(subject))
         {
-            throw new ArgumentException(SR.GetResourceString(SR.ID0198), nameof(subject));
+            query = query.Where(token => token.Subject == subject);
         }
 
-        if (string.IsNullOrEmpty(client))
+        if (!string.IsNullOrEmpty(client))
         {
-            throw new ArgumentException(SR.GetResourceString(SR.ID0124), nameof(client));
+            var appId = ConvertIdentifierFromString(client);
+            query = query.Where(token => token.ApplicationId!.Equals(appId));
         }
 
-        if (string.IsNullOrEmpty(status))
+        if (!string.IsNullOrEmpty(status))
         {
-            throw new ArgumentException(SR.GetResourceString(SR.ID0199), nameof(status));
+            query = query.Where(token => token.Status == status);
         }
 
-        var appId = ConvertIdentifierFromString(client);
-
-        return ExecuteAsync();
-        // need inline method so that cancellationToken can be used
-        async IAsyncEnumerable<TToken> ExecuteAsync()
+        if (!string.IsNullOrEmpty(type))
         {
-            await foreach (var token in Tokens
-                               .Where(token => token.ApplicationId!.Equals(appId) &&
-                                               token.Subject == subject &&
-                                               token.Status == status)
-                               .AsAsyncEnumerable().WithCancellation(cancellationToken))
-            {
-                yield return token;
-            }
-        }
-    }
-
-    /// <inheritdoc/>
-    public virtual IAsyncEnumerable<TToken> FindAsync(
-        string subject, string client,
-        string status, string type, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrEmpty(subject))
-        {
-            throw new ArgumentException(SR.GetResourceString(SR.ID0198), nameof(subject));
+            query = query.Where(token => token.Type == type);
         }
 
-        if (string.IsNullOrEmpty(client))
-        {
-            throw new ArgumentException(SR.GetResourceString(SR.ID0124), nameof(client));
-        }
-
-        if (string.IsNullOrEmpty(status))
-        {
-            throw new ArgumentException(SR.GetResourceString(SR.ID0199), nameof(status));
-        }
-
-        if (string.IsNullOrEmpty(type))
-        {
-            throw new ArgumentException(SR.GetResourceString(SR.ID0200), nameof(type));
-        }
-
-        var appId = ConvertIdentifierFromString(client);
-
-        return ExecuteAsync();
-        // need inline method so that cancellationToken can be used
-        async IAsyncEnumerable<TToken> ExecuteAsync()
-        {
-            await foreach (var token in Tokens
-                               .Where(token => token.ApplicationId!.Equals(appId) &&
-                                               token.Subject == subject &&
-                                               token.Status == status &&
-                                               token.Type == type)
-                               .AsAsyncEnumerable().WithCancellation(cancellationToken))
-            {
-                yield return token;
-            }
-        }
+        return query.AsAsyncEnumerable(cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -621,6 +544,66 @@ public class OpenIddictLinqToDBTokenStore<TToken, TApplication, TAuthorization, 
         return await (from token in Tokens
                       where token.AuthorizationId!.Equals(key)
                       select token).Set(_ => _.Status, Statuses.Revoked).UpdateAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async ValueTask<long> RevokeAsync(string? subject, string? client, string? status, string? type, CancellationToken cancellationToken)
+    {
+        var query = Tokens.AsQueryable();
+
+        if (!string.IsNullOrEmpty(subject))
+        {
+            query = query.Where(token => token.Subject == subject);
+        }
+
+        if (!string.IsNullOrEmpty(client))
+        {
+            var appId = ConvertIdentifierFromString(client);
+            query = query.Where(token => token.ApplicationId!.Equals(appId));
+        }
+
+        if (!string.IsNullOrEmpty(status))
+        {
+            query = query.Where(token => token.Status == status);
+        }
+
+        if (!string.IsNullOrEmpty(type))
+        {
+            query = query.Where(token => token.Type == type);
+        }
+
+        return await query.Set(token => token.Status, Statuses.Revoked)
+                          .UpdateAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async ValueTask<long> RevokeByApplicationIdAsync(string identifier, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(identifier))
+        {
+            throw new ArgumentException(SR.GetResourceString(SR.ID0195), nameof(identifier));
+        }
+
+        var appId = ConvertIdentifierFromString(identifier);
+
+        return await Tokens
+            .Where(token => token.ApplicationId!.Equals(appId))
+            .Set(token => token.Status, Statuses.Revoked)
+            .UpdateAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async ValueTask<long> RevokeBySubjectAsync(string subject, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(subject))
+        {
+            throw new ArgumentException(SR.GetResourceString(SR.ID0198), nameof(subject));
+        }
+
+        return await Tokens
+            .Where(token => token.Subject == subject)
+            .Set(token => token.Status, Statuses.Revoked)
+            .UpdateAsync(cancellationToken);
     }
 
     /// <inheritdoc/>

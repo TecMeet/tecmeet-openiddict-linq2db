@@ -285,6 +285,54 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
     }
 
     /// <inheritdoc/>
+    public virtual IAsyncEnumerable<TAuthorization> FindAsync(
+        string? subject, string? client,
+        string? status, string? type,
+        ImmutableArray<string>? scopes, CancellationToken cancellationToken)
+    {
+        var query = Authorizations.AsQueryable();
+
+        if (!string.IsNullOrEmpty(subject))
+        {
+            query = query.Where(auth => auth.Subject == subject);
+        }
+
+        if (!string.IsNullOrEmpty(client))
+        {
+            var key = ConvertIdentifierFromString(client);
+            query = query.Where(auth => auth.ApplicationId != null && auth.ApplicationId.Equals(key));
+        }
+
+        if (!string.IsNullOrEmpty(status))
+        {
+            query = query.Where(auth => auth.Status == status);
+        }
+
+        if (!string.IsNullOrEmpty(type))
+        {
+            query = query.Where(auth => auth.Type == type);
+        }
+
+        if (scopes.HasValue && scopes.Value.Length > 0)
+        {
+            return ExecuteAsync(cancellationToken);
+            async IAsyncEnumerable<TAuthorization> ExecuteAsync([EnumeratorCancellation] CancellationToken cToken)
+            {
+                await foreach (var authorization in query.AsAsyncEnumerable(cToken))
+                {
+                    if (new HashSet<string>(await GetScopesAsync(authorization, cToken), StringComparer.Ordinal)
+                        .IsSupersetOf(scopes.Value))
+                    {
+                        yield return authorization;
+                    }
+                }
+            }
+        }
+
+        return query.AsAsyncEnumerable(cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public virtual IAsyncEnumerable<TAuthorization> FindByApplicationIdAsync(
         string identifier, CancellationToken cancellationToken)
     {
@@ -725,6 +773,66 @@ public class OpenIddictLinqToDBAuthorizationStore<TAuthorization, TApplication, 
         authorization.ConcurrencyToken = Guid.NewGuid().ToString();
 
         await Context.UpdateAsync(authorization, token: cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async ValueTask<long> RevokeAsync(string? subject, string? client, string? status, string? type, CancellationToken cancellationToken)
+    {
+        var query = Authorizations.AsQueryable();
+
+        if (!string.IsNullOrEmpty(subject))
+        {
+            query = query.Where(auth => auth.Subject == subject);
+        }
+
+        if (!string.IsNullOrEmpty(client))
+        {
+            var key = ConvertIdentifierFromString(client);
+            query = query.Where(auth => auth.ApplicationId != null && auth.ApplicationId.Equals(key));
+        }
+
+        if (!string.IsNullOrEmpty(status))
+        {
+            query = query.Where(auth => auth.Status == status);
+        }
+
+        if (!string.IsNullOrEmpty(type))
+        {
+            query = query.Where(auth => auth.Type == type);
+        }
+
+        return await query.Set(auth => auth.Status, Statuses.Revoked)
+                          .UpdateAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async ValueTask<long> RevokeByApplicationIdAsync(string identifier, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(identifier))
+        {
+            throw new ArgumentException(SR.GetResourceString(SR.ID0195), nameof(identifier));
+        }
+
+        var key = ConvertIdentifierFromString(identifier);
+
+        return await Authorizations
+            .Where(auth => auth.ApplicationId != null && auth.ApplicationId.Equals(key))
+            .Set(auth => auth.Status, Statuses.Revoked)
+            .UpdateAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public virtual async ValueTask<long> RevokeBySubjectAsync(string subject, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(subject))
+        {
+            throw new ArgumentException(SR.GetResourceString(SR.ID0198), nameof(subject));
+        }
+
+        return await Authorizations
+            .Where(auth => auth.Subject == subject)
+            .Set(auth => auth.Status, Statuses.Revoked)
+            .UpdateAsync(cancellationToken);
     }
 
     /// <summary>
