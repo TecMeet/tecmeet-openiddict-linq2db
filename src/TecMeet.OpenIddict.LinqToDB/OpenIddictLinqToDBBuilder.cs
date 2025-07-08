@@ -5,8 +5,6 @@
  */
 
 using System.ComponentModel;
-using OpenIddict.Core;
-using TecMeet.OpenIddict.LinqToDB.Models;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -27,41 +25,6 @@ public class OpenIddictLinqToDBBuilder
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public IServiceCollection Services { get; }
-
-    /// <summary>
-    /// Configures OpenIddict to use the default OpenIddict
-    /// LinqToDB entities, with the specified key type.
-    /// </summary>
-    /// <returns>The <see cref="OpenIddictLinqToDBBuilder"/>.</returns>
-    public OpenIddictLinqToDBBuilder ReplaceDefaultEntities<TKey>()
-        where TKey : notnull, IEquatable<TKey>
-        => ReplaceDefaultEntities<OpenIddictLinqToDBApplication<TKey>,
-                                  OpenIddictLinqToDBAuthorization<TKey>,
-                                  OpenIddictLinqToDBScope<TKey>,
-                                  OpenIddictLinqToDBToken<TKey>, TKey>();
-
-    /// <summary>
-    /// Configures OpenIddict to use the specified entities, derived
-    /// from the default OpenIddict LinqToDB entities.
-    /// </summary>
-    /// <returns>The <see cref="OpenIddictLinqToDBBuilder"/>.</returns>
-    public OpenIddictLinqToDBBuilder ReplaceDefaultEntities<TApplication, TAuthorization, TScope, TToken, TKey>()
-        where TApplication : OpenIddictLinqToDBApplication<TKey>
-        where TAuthorization : OpenIddictLinqToDBAuthorization<TKey>
-        where TScope : OpenIddictLinqToDBScope<TKey>
-        where TToken : OpenIddictLinqToDBToken<TKey>
-        where TKey : notnull, IEquatable<TKey>
-    {
-        Services.Configure<OpenIddictCoreOptions>(options =>
-        {
-            options.DefaultApplicationType = typeof(TApplication);
-            options.DefaultAuthorizationType = typeof(TAuthorization);
-            options.DefaultScopeType = typeof(TScope);
-            options.DefaultTokenType = typeof(TToken);
-        });
-
-        return this;
-    }
 
     /// <inheritdoc/>
     [EditorBrowsable(EditorBrowsableState.Never)]

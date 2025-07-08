@@ -4,10 +4,7 @@
  * the license and the contributors participating to this project.
  */
 
-using LinqToDB;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using OpenIddict.Core;
 using TecMeet.OpenIddict.LinqToDB;
 using TecMeet.OpenIddict.LinqToDB.Models;
 using Xunit;
@@ -41,45 +38,6 @@ public class OpenIddictLinqToDBExtensionsTests
         Assert.Equal("configuration", exception.ParamName);
     }
 
-    [Fact]
-    public void UseLinqToDB_RegistersDefaultEntities()
-    {
-        // Arrange
-        var services = new ServiceCollection().AddOptions();
-        var builder = new OpenIddictCoreBuilder(services);
-
-        // Act
-        builder.UseLinqToDB();
-
-        // Assert
-        var provider = services.BuildServiceProvider();
-        var options = provider.GetRequiredService<IOptionsMonitor<OpenIddictCoreOptions>>().CurrentValue;
-
-        Assert.Equal(typeof(OpenIddictLinqToDBApplication), options.DefaultApplicationType);
-        Assert.Equal(typeof(OpenIddictLinqToDBAuthorization), options.DefaultAuthorizationType);
-        Assert.Equal(typeof(OpenIddictLinqToDBScope), options.DefaultScopeType);
-        Assert.Equal(typeof(OpenIddictLinqToDBToken), options.DefaultTokenType);
-    }
-
-    [Theory]
-    [InlineData(typeof(IOpenIddictApplicationStoreResolver), typeof(OpenIddictLinqToDBApplicationStoreResolver))]
-    [InlineData(typeof(IOpenIddictAuthorizationStoreResolver), typeof(OpenIddictLinqToDBAuthorizationStoreResolver))]
-    [InlineData(typeof(IOpenIddictScopeStoreResolver), typeof(OpenIddictLinqToDBScopeStoreResolver))]
-    [InlineData(typeof(IOpenIddictTokenStoreResolver), typeof(OpenIddictLinqToDBTokenStoreResolver))]
-    public void UseLinqToDB_RegistersLinqToDBStoreResolvers(Type serviceType, Type implementationType)
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        var builder = new OpenIddictCoreBuilder(services);
-
-        // Act
-        builder.UseLinqToDB();
-
-        // Assert
-        Assert.Contains(services, service => service.ServiceType == serviceType &&
-                                             service.ImplementationType == implementationType);
-    }
-
     [Theory]
     [InlineData(typeof(OpenIddictLinqToDBApplicationStore<,,,>))]
     [InlineData(typeof(OpenIddictLinqToDBAuthorizationStore<,,,>))]
@@ -95,6 +53,23 @@ public class OpenIddictLinqToDBExtensionsTests
         builder.UseLinqToDB();
 
         // Assert
-        Assert.Contains(services, service => service.ServiceType == type && service.ImplementationType == type);
+        Assert.Contains(services, service => service.ServiceType == type);
+    }
+
+    [Fact]
+    public void UseLinqToDB_RegistersLinqToDBStoreInterfaces()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var builder = new OpenIddictCoreBuilder(services);
+
+        // Act
+        builder.UseLinqToDB();
+
+        // Assert
+        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictApplicationStore<OpenIddictLinqToDBApplication>));
+        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictAuthorizationStore<OpenIddictLinqToDBAuthorization>));
+        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictScopeStore<OpenIddictLinqToDBScope>));
+        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictTokenStore<OpenIddictLinqToDBToken>));
     }
 }

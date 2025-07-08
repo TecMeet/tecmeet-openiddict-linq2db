@@ -6,6 +6,9 @@ me](https://github.com/openiddict/openiddict-core/issues/1503) to create and mai
 
 ## Latest changes
 
+### 5.0.0
+- Upgraded OpenIddict from 6.x to 7.x
+
 ### 4.0.0
 - Upgraded OpenIddict from 5.x to 6.x
 

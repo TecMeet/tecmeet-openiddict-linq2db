@@ -41,20 +41,23 @@ public static class OpenIddictLinqToDBExtensions
                .SetDefaultScopeEntity<OpenIddictLinqToDBScope>()
                .SetDefaultTokenEntity<OpenIddictLinqToDBToken>();
 
-        builder.ReplaceApplicationStoreResolver<OpenIddictLinqToDBApplicationStoreResolver>()
-               .ReplaceAuthorizationStoreResolver<OpenIddictLinqToDBAuthorizationStoreResolver>()
-               .ReplaceScopeStoreResolver<OpenIddictLinqToDBScopeStoreResolver>()
-               .ReplaceTokenStoreResolver<OpenIddictLinqToDBTokenStoreResolver>();
-
-        builder.Services.TryAddSingleton<OpenIddictLinqToDBApplicationStoreResolver.TypeResolutionCache>();
-        builder.Services.TryAddSingleton<OpenIddictLinqToDBAuthorizationStoreResolver.TypeResolutionCache>();
-        builder.Services.TryAddSingleton<OpenIddictLinqToDBScopeStoreResolver.TypeResolutionCache>();
-        builder.Services.TryAddSingleton<OpenIddictLinqToDBTokenStoreResolver.TypeResolutionCache>();
-
         builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBApplicationStore<,,,>));
         builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBAuthorizationStore<,,,>));
         builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBScopeStore<,>));
         builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBTokenStore<,,,>));
+
+        // Register the default stores for the default entities
+        builder.Services.TryAddScoped<IOpenIddictApplicationStore<OpenIddictLinqToDBApplication>>(provider =>
+            provider.GetRequiredService<OpenIddictLinqToDBApplicationStore<OpenIddictLinqToDBApplication, OpenIddictLinqToDBAuthorization, OpenIddictLinqToDBToken, string>>());
+        
+        builder.Services.TryAddScoped<IOpenIddictAuthorizationStore<OpenIddictLinqToDBAuthorization>>(provider =>
+            provider.GetRequiredService<OpenIddictLinqToDBAuthorizationStore<OpenIddictLinqToDBAuthorization, OpenIddictLinqToDBApplication, OpenIddictLinqToDBToken, string>>());
+        
+        builder.Services.TryAddScoped<IOpenIddictScopeStore<OpenIddictLinqToDBScope>>(provider =>
+            provider.GetRequiredService<OpenIddictLinqToDBScopeStore<OpenIddictLinqToDBScope, string>>());
+        
+        builder.Services.TryAddScoped<IOpenIddictTokenStore<OpenIddictLinqToDBToken>>(provider =>
+            provider.GetRequiredService<OpenIddictLinqToDBTokenStore<OpenIddictLinqToDBToken, OpenIddictLinqToDBApplication, OpenIddictLinqToDBAuthorization, string>>());
 
         return new OpenIddictLinqToDBBuilder(builder.Services);
     }
@@ -100,10 +103,6 @@ public static class OpenIddictLinqToDBExtensions
     /// Registers the OpenIddict entity sets in the LinqToDB 
     /// context using the default OpenIddict models and the specified key type.
     /// </summary>
-    /// <remarks>
-    /// Note: when using a custom key type, the new key type MUST be registered by calling
-    /// <see cref="OpenIddictLinqToDBBuilder.ReplaceDefaultEntities{TKey}"/>.
-    /// </remarks>
     /// <param name="mappingSchema">The LinqToDB MappingSchema that you're using. If it's not customized you can use MappingSchema.Default</param>
     /// <param name="dbOptions">Set this parameter if you want to use different database table names. See <see cref="OpenIddictLinqToDBNameOptions"/></param>
     /// <returns>The LinqToDB context builder.</returns>
@@ -119,10 +118,6 @@ public static class OpenIddictLinqToDBExtensions
     /// Registers the OpenIddict entity sets in the LinqToDB
     /// context using the specified entities and the specified key type.
     /// </summary>
-    /// <remarks>
-    /// Note: when using custom entities, the new entities MUST be registered by calling
-    /// <see cref="OpenIddictLinqToDBBuilder.ReplaceDefaultEntities{TApplication, TAuthorization, TScope, TToken, TKey}"/>.
-    /// </remarks>
     /// <param name="dbOptions">Set this parameter if you want to use different database table names. See <see cref="OpenIddictLinqToDBNameOptions"/></param>
     /// <param name="mappingSchema">The LinqToDB MappingSchema that you're using. If it's not customized you can use MappingSchema.Default</param>
     /// <returns>The LinqToDB context builder.</returns>
