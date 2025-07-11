@@ -23,7 +23,7 @@ namespace TecMeet.OpenIddict.LinqToDB;
 public class OpenIddictLinqToDBTokenStore :
     OpenIddictLinqToDBTokenStore<OpenIddictLinqToDBToken,
                                             OpenIddictLinqToDBApplication,
-                                            OpenIddictLinqToDBAuthorization, string>
+                                            OpenIddictLinqToDBAuthorization, Guid>
 {
     public OpenIddictLinqToDBTokenStore(
         IMemoryCache cache,

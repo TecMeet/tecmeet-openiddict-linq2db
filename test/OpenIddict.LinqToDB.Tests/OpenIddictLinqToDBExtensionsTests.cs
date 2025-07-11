@@ -67,9 +67,9 @@ public class OpenIddictLinqToDBExtensionsTests
         builder.UseLinqToDB();
 
         // Assert
-        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictApplicationStore<OpenIddictLinqToDBApplication<Guid>>));
-        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictAuthorizationStore<OpenIddictLinqToDBAuthorization<Guid>>));
-        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictScopeStore<OpenIddictLinqToDBScope<Guid>>));
-        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictTokenStore<OpenIddictLinqToDBToken<Guid>>));
+        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictApplicationStore<OpenIddictLinqToDBApplication>));
+        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictAuthorizationStore<OpenIddictLinqToDBAuthorization>));
+        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictScopeStore<OpenIddictLinqToDBScope>));
+        Assert.Contains(services, service => service.ServiceType == typeof(IOpenIddictTokenStore<OpenIddictLinqToDBToken>));
     }
 }

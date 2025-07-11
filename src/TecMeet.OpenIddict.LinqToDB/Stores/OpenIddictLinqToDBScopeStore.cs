@@ -21,7 +21,7 @@ namespace TecMeet.OpenIddict.LinqToDB;
 /// <summary>
 /// Provides methods allowing to manage the scopes stored in a database.
 /// </summary>
-public class OpenIddictLinqToDBScopeStore : OpenIddictLinqToDBScopeStore<OpenIddictLinqToDBScope, string>
+public class OpenIddictLinqToDBScopeStore : OpenIddictLinqToDBScopeStore<OpenIddictLinqToDBScope, Guid>
 {
     public OpenIddictLinqToDBScopeStore(
         IMemoryCache cache,

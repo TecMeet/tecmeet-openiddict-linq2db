@@ -12,7 +12,7 @@ namespace TecMeet.OpenIddict.LinqToDB.Models;
 /// <summary>
 /// Represents an OpenIddict authorization.
 /// </summary>
-public class OpenIddictLinqToDBAuthorization : OpenIddictLinqToDBAuthorization<string> {}
+public class OpenIddictLinqToDBAuthorization : OpenIddictLinqToDBAuthorization<Guid> {}
 
 /// <summary>
 /// Represents an OpenIddict authorization.

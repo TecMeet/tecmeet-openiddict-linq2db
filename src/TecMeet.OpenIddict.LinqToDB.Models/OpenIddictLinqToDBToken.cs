@@ -12,7 +12,7 @@ namespace TecMeet.OpenIddict.LinqToDB.Models;
 /// <summary>
 /// Represents an OpenIddict token.
 /// </summary>
-public class OpenIddictLinqToDBToken : OpenIddictLinqToDBToken<string> {}
+public class OpenIddictLinqToDBToken : OpenIddictLinqToDBToken<Guid> {}
 
 /// <summary>
 /// Represents an OpenIddict token.

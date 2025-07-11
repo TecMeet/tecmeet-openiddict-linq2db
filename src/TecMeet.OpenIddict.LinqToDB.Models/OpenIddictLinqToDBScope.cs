@@ -11,7 +11,7 @@ namespace TecMeet.OpenIddict.LinqToDB.Models;
 /// <summary>
 /// Represents an OpenIddict scope.
 /// </summary>
-public class OpenIddictLinqToDBScope : OpenIddictLinqToDBScope<string> {}
+public class OpenIddictLinqToDBScope : OpenIddictLinqToDBScope<Guid> {}
 
 /// <summary>
 /// Represents an OpenIddict scope.

@@ -393,7 +393,7 @@ public class OpenIddictLinqToDBApplicationStoreTests
     {
         // Arrange
         var application = CreateApplication();
-        application.Id = "e7fe1a6a-5d2f-4ea9-be72-2c567259c74d";
+        application.Id = Guid.Parse("e7fe1a6a-5d2f-4ea9-be72-2c567259c74d");
         var store = CreateStore();
 
         // Act
