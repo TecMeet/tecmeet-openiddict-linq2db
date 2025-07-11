@@ -47,17 +47,17 @@ public static class OpenIddictLinqToDBExtensions
         builder.Services.TryAddScoped(typeof(OpenIddictLinqToDBTokenStore<,,,>));
 
         // Register the default stores for the default entities
-        builder.Services.TryAddScoped<IOpenIddictApplicationStore<OpenIddictLinqToDBApplication>>(provider =>
-            provider.GetRequiredService<OpenIddictLinqToDBApplicationStore<OpenIddictLinqToDBApplication, OpenIddictLinqToDBAuthorization, OpenIddictLinqToDBToken, string>>());
+        builder.Services.TryAddScoped<IOpenIddictApplicationStore<OpenIddictLinqToDBApplication<Guid>>>(provider =>
+            provider.GetRequiredService<OpenIddictLinqToDBApplicationStore<OpenIddictLinqToDBApplication<Guid>, OpenIddictLinqToDBAuthorization<Guid>, OpenIddictLinqToDBToken<Guid>, Guid>>());
         
-        builder.Services.TryAddScoped<IOpenIddictAuthorizationStore<OpenIddictLinqToDBAuthorization>>(provider =>
-            provider.GetRequiredService<OpenIddictLinqToDBAuthorizationStore<OpenIddictLinqToDBAuthorization, OpenIddictLinqToDBApplication, OpenIddictLinqToDBToken, string>>());
+        builder.Services.TryAddScoped<IOpenIddictAuthorizationStore<OpenIddictLinqToDBAuthorization<Guid>>>(provider =>
+            provider.GetRequiredService<OpenIddictLinqToDBAuthorizationStore<OpenIddictLinqToDBAuthorization<Guid>, OpenIddictLinqToDBApplication<Guid>, OpenIddictLinqToDBToken<Guid>, Guid>>());
         
-        builder.Services.TryAddScoped<IOpenIddictScopeStore<OpenIddictLinqToDBScope>>(provider =>
-            provider.GetRequiredService<OpenIddictLinqToDBScopeStore<OpenIddictLinqToDBScope, string>>());
+        builder.Services.TryAddScoped<IOpenIddictScopeStore<OpenIddictLinqToDBScope<Guid>>>(provider =>
+            provider.GetRequiredService<OpenIddictLinqToDBScopeStore<OpenIddictLinqToDBScope<Guid>, Guid>>());
         
-        builder.Services.TryAddScoped<IOpenIddictTokenStore<OpenIddictLinqToDBToken>>(provider =>
-            provider.GetRequiredService<OpenIddictLinqToDBTokenStore<OpenIddictLinqToDBToken, OpenIddictLinqToDBApplication, OpenIddictLinqToDBAuthorization, string>>());
+        builder.Services.TryAddScoped<IOpenIddictTokenStore<OpenIddictLinqToDBToken<Guid>>>(provider =>
+            provider.GetRequiredService<OpenIddictLinqToDBTokenStore<OpenIddictLinqToDBToken<Guid>, OpenIddictLinqToDBApplication<Guid>, OpenIddictLinqToDBAuthorization<Guid>, Guid>>());
 
         return new OpenIddictLinqToDBBuilder(builder.Services);
     }
