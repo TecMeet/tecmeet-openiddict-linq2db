@@ -5,6 +5,7 @@
  */
 
 using LinqToDB;
+using LinqToDB.Async;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Immutable;

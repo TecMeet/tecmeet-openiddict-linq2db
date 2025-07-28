@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using LinqToDB;
+using LinqToDB.Async;
 using Microsoft.Extensions.Caching.Memory;
 using NodaTime;
 using TecMeet.OpenIddict.LinqToDB.Models;

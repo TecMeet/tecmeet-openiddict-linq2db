@@ -5,11 +5,7 @@
  */
 
 using System.Runtime.CompilerServices;
-using LinqToDB.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using OpenIddict.LinqToDB;
-using TecMeet.OpenIddict.LinqToDB;
-using TecMeet.OpenIddict.LinqToDB.Models;
+using LinqToDB.Async;
 
 namespace LinqToDB;
 
