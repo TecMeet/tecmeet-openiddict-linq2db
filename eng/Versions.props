@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <MajorVersion>5</MajorVersion>
-    <MinorVersion>0</MinorVersion>
+    <MinorVersion>1</MinorVersion>
     <PatchVersion>0</PatchVersion>
     <VersionPrefix>$(MajorVersion).$(MinorVersion).$(PatchVersion)</VersionPrefix>
-    <PreReleaseVersionLabel></PreReleaseVersionLabel>
+    <PreReleaseVersionLabel>rc1</PreReleaseVersionLabel>
     <PreReleaseVersionIteration></PreReleaseVersionIteration>
-    <PreReleaseBrandingLabel></PreReleaseBrandingLabel>
+    <PreReleaseBrandingLabel>RC 1</PreReleaseBrandingLabel>
     <StabilizePackageVersion Condition=" '$(StabilizePackageVersion)' == '' ">false</StabilizePackageVersion>
     <DotNetFinalVersionKind Condition=" '$(StabilizePackageVersion)' == 'true' ">release</DotNetFinalVersionKind>
     <IncludePreReleaseLabelInPackageVersion>true</IncludePreReleaseLabelInPackageVersion>
