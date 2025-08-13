@@ -5,9 +5,9 @@
     <MinorVersion>1</MinorVersion>
     <PatchVersion>0</PatchVersion>
     <VersionPrefix>$(MajorVersion).$(MinorVersion).$(PatchVersion)</VersionPrefix>
-    <PreReleaseVersionLabel>rc1</PreReleaseVersionLabel>
+    <PreReleaseVersionLabel>rc2</PreReleaseVersionLabel>
     <PreReleaseVersionIteration></PreReleaseVersionIteration>
-    <PreReleaseBrandingLabel>RC 1</PreReleaseBrandingLabel>
+    <PreReleaseBrandingLabel>RC 2</PreReleaseBrandingLabel>
     <StabilizePackageVersion Condition=" '$(StabilizePackageVersion)' == '' ">false</StabilizePackageVersion>
     <DotNetFinalVersionKind Condition=" '$(StabilizePackageVersion)' == 'true' ">release</DotNetFinalVersionKind>
     <IncludePreReleaseLabelInPackageVersion>true</IncludePreReleaseLabelInPackageVersion>
